@@ -6,6 +6,7 @@ export interface ObjectionScript {
   patterns: string[];
   script: string;
   priority: number;
+  leadTypes?: LeadType[];
 }
 
 export type ObjectionCategory =
@@ -14,7 +15,13 @@ export type ObjectionCategory =
   | 'BAD_TIMING'
   | 'NOT_SELLING'
   | 'PRICE_CONCERN'
-  | 'DO_NOT_CALL';
+  | 'DO_NOT_CALL'
+  | 'COMMISSION_OBJECTION'
+  | 'WANT_TO_TRY_MYSELF'
+  | 'TENANT_ISSUES'
+  | 'FINANCIAL_DISTRESS';
+
+export type LeadType = 'expired' | 'fsbo' | 'frbo' | 'pre-foreclosure';
 
 export interface DetectedObjection {
   category: ObjectionCategory;

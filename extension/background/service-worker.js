@@ -9,6 +9,10 @@ const MSG = {
   GET_STATUS: 'get-status',
   CALL_STATUS: 'call-status',
   SESSION_ID: 'session-id',
+  PAUSE_CALL: 'pause-call',
+  RESUME_CALL: 'resume-call',
+  PAUSE_CAPTURE: 'pause-capture',
+  RESUME_CAPTURE: 'resume-capture',
 };
 
 let currentSessionId = null;
@@ -21,7 +25,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
     case MSG.START_CALL:
-      handleStartCall(message.tabId).then(sendResponse);
+      handleStartCall(message.tabId, message.leadType).then(sendResponse);
       return true;
 
     case MSG.STOP_CALL:
@@ -50,10 +54,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       isCapturing = false;
       broadcastStatus();
       return false;
+
+    case MSG.PAUSE_CALL:
+      // Relay pause to offscreen document
+      chrome.runtime.sendMessage({ type: MSG.PAUSE_CAPTURE }).catch(() => {});
+      return false;
+
+    case MSG.RESUME_CALL:
+      // Relay resume to offscreen document
+      chrome.runtime.sendMessage({ type: MSG.RESUME_CAPTURE }).catch(() => {});
+      return false;
   }
 });
 
-async function handleStartCall(tabId) {
+async function handleStartCall(tabId, leadType) {
   try {
     currentSessionId = crypto.randomUUID();
 
@@ -69,6 +83,7 @@ async function handleStartCall(tabId) {
       streamId,
       sessionId: currentSessionId,
       tabId,
+      leadType: leadType || '',
     });
 
     return { success: true, sessionId: currentSessionId };

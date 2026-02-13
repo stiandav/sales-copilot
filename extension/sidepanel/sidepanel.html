@@ -16,6 +16,23 @@
       </div>
     </header>
 
+    <!-- Settings Bar: Practice Mode + Lead Type -->
+    <div class="settings-bar">
+      <label class="toggle">
+        <input type="checkbox" id="practice-toggle">
+        <span class="toggle__slider"></span>
+        <span class="toggle__label">Practice</span>
+      </label>
+      <select class="lead-select" id="lead-type">
+        <option value="">Lead Type</option>
+        <option value="expired">Expired</option>
+        <option value="fsbo">FSBO</option>
+        <option value="frbo">FRBO</option>
+        <option value="pre-foreclosure">Pre-Foreclosure</option>
+      </select>
+    </div>
+
+    <!-- Call Controls -->
     <div class="call-controls" id="call-controls">
       <button class="btn btn--start" id="btn-start">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -23,34 +40,60 @@
         </svg>
         Start Call
       </button>
+      <button class="btn btn--pause hidden" id="btn-pause">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <rect x="4" y="3" width="3" height="10" rx="1"/>
+          <rect x="9" y="3" width="3" height="10" rx="1"/>
+        </svg>
+        Pause
+      </button>
       <button class="btn btn--stop hidden" id="btn-stop">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <rect x="3" y="3" width="10" height="10" rx="1"/>
         </svg>
-        End Call
+        End
       </button>
       <div class="call-timer hidden" id="call-timer">00:00</div>
     </div>
 
+    <!-- Cost Display -->
+    <div class="cost-bar hidden" id="cost-bar">
+      <span class="cost-bar__label">Cost:</span>
+      <span class="cost-bar__amount" id="cost-amount">$0.00</span>
+      <span class="cost-bar__detail" id="cost-detail"></span>
+    </div>
+
+    <!-- Practice Mode Input -->
+    <div class="practice-input hidden" id="practice-input">
+      <div class="section-label">Practice Mode — Type what the prospect says</div>
+      <div class="practice-input__row">
+        <input type="text" class="practice-input__field" id="practice-field" placeholder='e.g. "We&apos;re not interested in selling right now"' autocomplete="off">
+        <button class="btn btn--send" id="practice-send">Send</button>
+      </div>
+    </div>
+
+    <!-- Transcript -->
     <div class="transcript-section hidden" id="transcript-section">
       <div class="section-label">Live Transcript</div>
       <div class="transcript" id="transcript"></div>
     </div>
 
+    <!-- Suggestions -->
     <div class="suggestion-section hidden" id="suggestion-section">
       <div class="section-label">AI Suggestion</div>
       <div id="suggestion-container"></div>
       <div id="previous-suggestions"></div>
     </div>
 
+    <!-- Empty State -->
     <div class="empty-state" id="empty-state">
       <div class="empty-state__icon">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M34 28l-7-3a2 2 0 00-2 0l-3 3a1 1 0 01-1 0 24 24 0 01-7-7 1 1 0 010-1l3-3a2 2 0 000-2l-3-7a2 2 0 00-2-1l-6 1a2 2 0 00-1 2A30 30 0 0032 37a2 2 0 002-1l1-6a2 2 0 00-1-2z"/>
         </svg>
       </div>
-      <p class="empty-state__text">Open a browser-based dialer and click <strong>Start Call</strong> to begin.</p>
-      <p class="empty-state__hint">The AI will detect objections and suggest responses in real-time.</p>
+      <p class="empty-state__text">Select a lead type, then click <strong>Start Call</strong> to begin.</p>
+      <p class="empty-state__hint">Toggle <strong>Practice</strong> to test scripts without using API credits.</p>
     </div>
   </div>
 

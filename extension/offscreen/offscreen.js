@@ -9,6 +9,8 @@ const MSG = {
   CAPTURE_STARTED: 'capture-started',
   CAPTURE_STOPPED: 'capture-stopped',
   CAPTURE_ERROR: 'capture-error',
+  PAUSE_CAPTURE: 'pause-capture',
+  RESUME_CAPTURE: 'resume-capture',
 };
 
 let audioContext = null;
@@ -17,16 +19,21 @@ let micStream = null;
 let ws = null;
 let tabWorkletNode = null;
 let micWorkletNode = null;
+let isPaused = false;
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === MSG.START_CAPTURE) {
-    startCapture(message.streamId, message.sessionId);
+    startCapture(message.streamId, message.sessionId, message.leadType);
   } else if (message.type === MSG.STOP_CAPTURE) {
     stopCapture();
+  } else if (message.type === MSG.PAUSE_CAPTURE) {
+    isPaused = true;
+  } else if (message.type === MSG.RESUME_CAPTURE) {
+    isPaused = false;
   }
 });
 
-async function startCapture(streamId, sessionId) {
+async function startCapture(streamId, sessionId, leadType) {
   try {
     // Get tab audio stream using the stream ID from tabCapture
     tabStream = await navigator.mediaDevices.getUserMedia({
@@ -39,6 +46,8 @@ async function startCapture(streamId, sessionId) {
     });
 
     // Get microphone stream
+    // On macOS with BlackHole: set Chrome's mic input to your earbuds mic
+    // BlackHole captures system audio, but the extension already captures tab audio directly
     try {
       micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -57,8 +66,12 @@ async function startCapture(streamId, sessionId) {
     // Load worklet
     await audioContext.audioWorklet.addModule('audio-worklet-processor.js');
 
-    // Connect WebSocket
-    ws = new WebSocket(WS_BASE_URL + '/ws/audio?sessionId=' + sessionId);
+    // Connect WebSocket with leadType param
+    let wsUrl = WS_BASE_URL + '/ws/audio?sessionId=' + sessionId;
+    if (leadType) {
+      wsUrl += '&leadType=' + leadType;
+    }
+    ws = new WebSocket(wsUrl);
     ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
@@ -95,7 +108,9 @@ function setupAudioPipeline() {
   tabWorkletNode = new AudioWorkletNode(audioContext, 'pcm-processor');
 
   tabWorkletNode.port.onmessage = (event) => {
-    sendAudioFrame(CHANNEL_PROSPECT, event.data);
+    if (!isPaused) {
+      sendAudioFrame(CHANNEL_PROSPECT, event.data);
+    }
   };
 
   tabSource.connect(tabWorkletNode);
@@ -108,7 +123,9 @@ function setupAudioPipeline() {
     micWorkletNode = new AudioWorkletNode(audioContext, 'pcm-processor');
 
     micWorkletNode.port.onmessage = (event) => {
-      sendAudioFrame(CHANNEL_REP, event.data);
+      if (!isPaused) {
+        sendAudioFrame(CHANNEL_REP, event.data);
+      }
     };
 
     micSource.connect(micWorkletNode);
@@ -128,6 +145,8 @@ function sendAudioFrame(channel, pcmBuffer) {
 }
 
 function stopCapture() {
+  isPaused = false;
+
   if (tabWorkletNode) {
     tabWorkletNode.disconnect();
     tabWorkletNode = null;

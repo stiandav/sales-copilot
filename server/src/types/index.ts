@@ -29,3 +29,11 @@ export interface ConversationTurn {
   content: string;
   timestamp: number;
 }
+
+export interface CostBreakdown {
+  deepgramMinutes: number;
+  claudeCalls: number;
+  claudeInputTokens: number;
+  claudeOutputTokens: number;
+  estimatedCostCents: number;
+}

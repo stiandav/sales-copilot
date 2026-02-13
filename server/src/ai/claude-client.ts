@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config';
 
 type StreamCallback = (chunk: string) => void;
-type CompleteCallback = (fullText: string) => void;
+type CompleteCallback = (fullText: string, inputTokens: number, outputTokens: number) => void;
 
 export class ClaudeClient {
   private client: Anthropic;
@@ -36,10 +36,12 @@ export class ClaudeClient {
       });
 
       const finalMessage = await stream.finalMessage();
-      onComplete(fullText);
+      const inputTokens = finalMessage.usage?.input_tokens || 0;
+      const outputTokens = finalMessage.usage?.output_tokens || 0;
+      onComplete(fullText, inputTokens, outputTokens);
     } catch (error) {
       console.error('Claude streaming error:', error);
-      onComplete(fullText || 'Unable to generate adapted script.');
+      onComplete(fullText || 'Unable to generate adapted script.', 0, 0);
     }
   }
 }

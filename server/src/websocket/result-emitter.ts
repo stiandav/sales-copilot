@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { ResultMessage } from '../types';
+import { ResultMessage, CostBreakdown } from '../types';
 
 export class ResultEmitter {
   private ws: WebSocket | null = null;
@@ -18,7 +18,7 @@ export class ResultEmitter {
     }
   }
 
-  sendStatus(status: 'connected' | 'transcribing' | 'ended', sessionId: string): void {
+  sendStatus(status: 'connected' | 'transcribing' | 'ended' | 'paused' | 'practice', sessionId: string): void {
     this.send({
       type: 'session_status',
       status,
@@ -49,7 +49,8 @@ export class ResultEmitter {
     objectionType: string,
     objectionLabel: string,
     baseScript: string,
-    triggerText: string
+    triggerText: string,
+    latencyMs?: number
   ): void {
     this.send({
       type: 'suggestion_start',
@@ -59,6 +60,7 @@ export class ResultEmitter {
       baseScript,
       triggerText,
       timestamp: Date.now(),
+      latencyMs,
     });
   }
 
@@ -70,11 +72,19 @@ export class ResultEmitter {
     });
   }
 
-  sendSuggestionComplete(suggestionId: string, fullScript: string): void {
+  sendSuggestionComplete(suggestionId: string, fullScript: string, latencyMs?: number): void {
     this.send({
       type: 'suggestion_complete',
       suggestionId,
       fullScript,
+      latencyMs,
+    });
+  }
+
+  sendCostUpdate(cost: CostBreakdown): void {
+    this.send({
+      type: 'cost_update',
+      ...cost,
     });
   }
 

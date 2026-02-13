@@ -11,6 +11,7 @@
   --accent-red: #ea4335;
   --accent-yellow: #f9ab00;
   --accent-purple: #a855f7;
+  --accent-orange: #f97316;
   --border: #2e3240;
   --radius: 8px;
   --radius-sm: 4px;
@@ -39,7 +40,7 @@ body {
   flex-direction: column;
   height: 100vh;
   padding: 12px;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Header */
@@ -47,7 +48,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .header__title {
@@ -84,26 +85,114 @@ body {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
+.status-dot--paused {
+  background: var(--accent-yellow);
+  box-shadow: 0 0 6px var(--accent-yellow);
+}
+
+.status-dot--practice {
+  background: var(--accent-purple);
+  box-shadow: 0 0 6px var(--accent-purple);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+/* Settings Bar */
+.settings-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  display: none;
+}
+
+.toggle__slider {
+  width: 36px;
+  height: 20px;
+  background: var(--bg-highlight);
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.2s;
+  border: 1px solid var(--border);
+}
+
+.toggle__slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: var(--text-secondary);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.toggle input:checked + .toggle__slider {
+  background: var(--accent-purple);
+  border-color: var(--accent-purple);
+}
+
+.toggle input:checked + .toggle__slider::after {
+  left: 18px;
+  background: white;
+}
+
+.toggle__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-select {
+  flex: 1;
+  padding: 6px 10px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.lead-select:focus {
+  border-color: var(--accent-blue);
 }
 
 /* Call Controls */
 .call-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 20px;
+  padding: 10px 16px;
   border: none;
   border-radius: var(--radius);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -123,10 +212,37 @@ body {
 .btn--stop {
   background: var(--accent-red);
   color: white;
+  flex: 0.5;
 }
 
 .btn--stop:hover {
   background: #d33426;
+}
+
+.btn--pause {
+  background: var(--accent-yellow);
+  color: #1a1d27;
+  flex: 0.5;
+}
+
+.btn--pause:hover {
+  background: #e09a00;
+}
+
+.btn--pause.is-paused {
+  background: var(--accent-green);
+  color: white;
+}
+
+.btn--send {
+  background: var(--accent-purple);
+  color: white;
+  flex: 0;
+  padding: 8px 16px;
+}
+
+.btn--send:hover {
+  background: #9333ea;
 }
 
 .btn:disabled {
@@ -135,16 +251,74 @@ body {
 }
 
 .call-timer {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
-  min-width: 60px;
+  min-width: 50px;
   text-align: center;
 }
 
 .hidden {
   display: none !important;
+}
+
+/* Cost Bar */
+.cost-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.cost-bar__label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cost-bar__amount {
+  color: var(--accent-green);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-bar__detail {
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+/* Practice Input */
+.practice-input {
+  padding: 0;
+}
+
+.practice-input__row {
+  display: flex;
+  gap: 6px;
+}
+
+.practice-input__field {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+}
+
+.practice-input__field:focus {
+  border-color: var(--accent-purple);
+}
+
+.practice-input__field::placeholder {
+  color: var(--text-dim);
 }
 
 /* Section Labels */
@@ -275,6 +449,12 @@ body {
   margin-bottom: 8px;
 }
 
+.suggestion-card__latency {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
 .suggestion-card__tabs {
   display: flex;
   gap: 4px;
@@ -343,6 +523,10 @@ body {
 .objection-badge--NOT_SELLING { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
 .objection-badge--PRICE_CONCERN { background: rgba(249, 171, 0, 0.15); color: #fbbf24; }
 .objection-badge--DO_NOT_CALL { background: rgba(234, 67, 53, 0.2); color: #f87171; }
+.objection-badge--COMMISSION_OBJECTION { background: rgba(249, 115, 22, 0.15); color: #fb923c; }
+.objection-badge--WANT_TO_TRY_MYSELF { background: rgba(249, 115, 22, 0.15); color: #fb923c; }
+.objection-badge--TENANT_ISSUES { background: rgba(52, 168, 83, 0.15); color: #4ade80; }
+.objection-badge--FINANCIAL_DISTRESS { background: rgba(234, 67, 53, 0.15); color: #f87171; }
 
 /* Empty State */
 .empty-state {

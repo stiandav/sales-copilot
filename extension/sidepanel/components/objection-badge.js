@@ -5,6 +5,10 @@ const OBJECTION_LABELS = {
   NOT_SELLING: 'Not Selling',
   PRICE_CONCERN: 'Price Concern',
   DO_NOT_CALL: 'Do Not Call',
+  COMMISSION_OBJECTION: 'Commission',
+  WANT_TO_TRY_MYSELF: 'DIY Seller',
+  TENANT_ISSUES: 'Tenant Issues',
+  FINANCIAL_DISTRESS: 'Hardship',
 };
 
 class ObjectionBadge {

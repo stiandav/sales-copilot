@@ -6,14 +6,12 @@ import { setupWebSocketServer } from './websocket/ws-server';
 import { setupRoutes } from './api/routes';
 import { ScriptStore } from './scripts/script-store';
 
-// Validate required API keys on startup
+// Validate API keys on startup (warnings, not fatal — practice mode works without them)
 if (!config.deepgramApiKey) {
-  console.error('ERROR: DEEPGRAM_API_KEY is not set. Copy .env.example to .env and add your Deepgram API key.');
-  process.exit(1);
+  console.warn('WARNING: DEEPGRAM_API_KEY is not set. Live transcription will not work. Practice mode is still available.');
 }
 if (!config.anthropicApiKey) {
-  console.error('ERROR: ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your Anthropic API key.');
-  process.exit(1);
+  console.warn('WARNING: ANTHROPIC_API_KEY is not set. AI script adaptation will not work. Base scripts and practice mode are still available.');
 }
 
 const app = express();
@@ -25,6 +23,7 @@ app.get('/health', (_req, res) => {
     status: 'ok',
     timestamp: Date.now(),
     version: '1.0.0',
+    practiceMode: !config.deepgramApiKey || !config.anthropicApiKey,
   });
 });
 
@@ -39,4 +38,7 @@ server.listen(config.port, () => {
   console.log(`Health check: http://localhost:${config.port}/health`);
   console.log(`WebSocket audio: ws://localhost:${config.port}/ws/audio`);
   console.log(`WebSocket results: ws://localhost:${config.port}/ws/results`);
+  if (!config.deepgramApiKey || !config.anthropicApiKey) {
+    console.log('Practice mode available (some API keys missing)');
+  }
 });

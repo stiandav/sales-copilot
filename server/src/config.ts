@@ -29,5 +29,12 @@ export const config = {
     maxConversationTurns: 10,
     maxContextTokens: 2000,
     suggestionDebounceMs: 500,
+    minProspectChars: 20,
+  },
+
+  costRates: {
+    deepgramPerMinute: 0.0043,
+    claudeInputPerMTok: 1.00,
+    claudeOutputPerMTok: 5.00,
   },
 };

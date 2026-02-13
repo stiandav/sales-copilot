@@ -14,9 +14,12 @@
       "not for me",
       "pass on that",
       "i'll pass",
-      "no need"
+      "no need",
+      "we're good",
+      "we're fine",
+      "not for us"
     ],
-    "script": "I completely understand, and I wouldn't expect you to be interested until you knew what we could actually do for you. Most homeowners I work with felt the same way initially. Would it be fair if I just shared one quick insight about what's happening with home values in your neighborhood? If it's not relevant, I'll never call again."
+    "script": "I totally get that — and honestly, most homeowners I call in San Diego feel the same way at first. I'm not calling to pressure you into anything. I actually specialize in your area and I've been tracking your neighborhood closely. Would it be fair if I just shared what your home could realistically sell for in today's market? If the number doesn't excite you, I promise I won't call again."
   },
   {
     "id": "not-interested-firm",
@@ -27,13 +30,37 @@
     "patterns": [
       "absolutely not",
       "definitely not interested",
-      "stop calling",
       "not interested at all",
       "please don't call",
       "never",
-      "not now not ever"
+      "not now not ever",
+      "hell no",
+      "no way"
     ],
-    "script": "I hear you, and I respect that completely. Before I let you go — I'm not trying to sell you anything today. I'm just the neighborhood specialist, and I put together a free home value report for your area. Can I email that over? No strings attached. If your plans change in the future, you'll have my number."
+    "script": "I hear you and I respect that completely. Before I go — I'm the neighborhood specialist for your area and I put together a complimentary home valuation report. There's absolutely no strings attached and no follow-up unless you want it. Can I email that over? You'll have my number if anything ever changes."
+  },
+  {
+    "id": "expired-frustration",
+    "category": "NOT_INTERESTED",
+    "variant": "expired",
+    "label": "Expired Listing Frustration",
+    "priority": 3,
+    "leadTypes": ["expired"],
+    "patterns": [
+      "already tried",
+      "didn't sell",
+      "listing expired",
+      "was on the market",
+      "took it off",
+      "agent couldn't sell",
+      "waste of time",
+      "tried that already",
+      "been through this",
+      "sat on the market",
+      "no offers",
+      "bad experience"
+    ],
+    "script": "I completely understand your frustration — having your home sit on the market with no results is one of the worst experiences. And I'm not going to sit here and badmouth your previous agent. But here's what I can tell you: there are really only three reasons a home doesn't sell — price, condition, or marketing. Our team invests over $30,000 a month in marketing alone, and we have a dedicated listing specialist who manages every detail. What if we did a quick analysis to show you exactly what went wrong last time and what we'd do differently? No commitment — just information."
   },
   {
     "id": "already-have-agent",
@@ -51,9 +78,12 @@
       "friend is an agent",
       "family member is",
       "sister is a realtor",
-      "brother is a realtor"
+      "brother is a realtor",
+      "know someone in real estate",
+      "neighbor is an agent",
+      "have someone"
     ],
-    "script": "That's great that you have someone you trust. I'm not looking to step on any toes. Quick question though — are you locked into an exclusive agreement with them, or are you still exploring your options? Sometimes a second opinion on pricing can actually help you and your current agent get a better result."
+    "script": "That's great you have someone you trust — that's actually smart. Quick question though: are you under a signed listing agreement right now, or is it more of a casual relationship? I only ask because a lot of homeowners in San Diego have found that getting a second pricing opinion actually helped them and their agent get a better result. Our team spends over $30,000 a month in marketing and we have a dedicated listing specialist — sometimes a fresh set of eyes on the pricing strategy makes a real difference."
   },
   {
     "id": "bad-timing",
@@ -72,9 +102,11 @@
       "can't talk",
       "call me back",
       "another time",
-      "maybe later"
+      "maybe later",
+      "eating dinner",
+      "with my family"
     ],
-    "script": "I totally understand, I caught you at a busy moment. I'll be brief — just 30 seconds. I'm reaching out because homes in your area are selling for [X]% above what most owners expect. When would be the best time for a quick 5-minute chat? I'm available mornings or evenings — what works better for you?"
+    "script": "I totally get it, I caught you at a bad moment. I'll keep it to literally 10 seconds: I'm a local real estate specialist and homes in your San Diego neighborhood are selling for more than most owners expect right now. Can I call you back tomorrow? What time works best — mornings or evenings?"
   },
   {
     "id": "not-selling-general",
@@ -91,15 +123,17 @@
       "staying put",
       "no plans to move",
       "we're staying",
-      "not going anywhere"
+      "not going anywhere",
+      "like our neighborhood",
+      "love this area"
     ],
-    "script": "That's totally fine — most of the people I talk to aren't actively selling. The reason I'm calling is that your home has likely appreciated significantly. Would you be open to knowing what it's worth in today's market? No commitment at all. A lot of homeowners are surprised by the number and it helps with financial planning, refinancing, even insurance."
+    "script": "That makes total sense — most people I talk to aren't looking to sell right now. The only reason I'm reaching out is that San Diego inventory is extremely low and buyer demand in your neighborhood has pushed values up significantly. Would you be open to just knowing what your home is worth? No commitment, no pressure. A lot of homeowners use it for financial planning, refinancing, or even challenging their property tax assessment."
   },
   {
     "id": "not-selling-just-bought",
     "category": "NOT_SELLING",
     "variant": "just_bought",
-    "label": "Just Bought / Just Signed",
+    "label": "Just Bought",
     "priority": 2,
     "patterns": [
       "just bought",
@@ -108,30 +142,33 @@
       "just signed",
       "just purchased",
       "just got this house",
-      "just settled"
+      "just settled",
+      "recently moved",
+      "new homeowner"
     ],
-    "script": "Congratulations on the new home! I know selling is the last thing on your mind right now. I actually call new homeowners to introduce myself as the neighborhood specialist. I track values in your area closely — would it be helpful if I sent you a quick annual update on your home's equity? It's great for tracking your investment, and if your plans change down the road, you'll already have a trusted contact."
+    "script": "Congratulations on the new place! I'm not calling to get you to sell — I actually reach out to new homeowners in the area to introduce myself as the neighborhood specialist. I track all the sales in your area and I'd love to just be a resource for you. Can I send you a quick annual equity update? It's free and it's great for tracking your investment. And if you ever need a contractor recommendation or anything local, I'm your guy."
   },
   {
     "id": "price-concern",
     "category": "PRICE_CONCERN",
-    "label": "Price Concern",
+    "label": "Price / Market Concern",
     "priority": 1,
     "patterns": [
       "market is down",
       "prices are dropping",
       "not worth it",
       "won't get enough",
-      "can't afford",
-      "too expensive",
-      "commission",
-      "fees are too high",
       "not the right market",
       "waiting for prices",
       "market crash",
-      "housing bubble"
+      "housing bubble",
+      "market is bad",
+      "interest rates",
+      "rates are too high",
+      "values are dropping",
+      "prices going down"
     ],
-    "script": "I hear that concern a lot, and honestly it's smart to be thinking about timing. Here's what the data actually shows for your specific neighborhood — values have [increased/held steady] over the past 12 months. What if I put together a no-obligation market analysis for your home specifically? That way you're making decisions based on real numbers, not headlines. Would that be helpful?"
+    "script": "That's a really smart thing to be thinking about. Here's what's actually happening in San Diego County right now — despite what the national headlines say, our local market is different. Inventory is still tight and well-priced homes are still moving fast, many with multiple offers. What if I put together a custom market analysis for your home specifically? Real numbers, not Zillow estimates. That way you can make a decision based on facts, not headlines. Would that be helpful?"
   },
   {
     "id": "do-not-call",
@@ -143,12 +180,103 @@
       "take me off",
       "remove my number",
       "don't call again",
-      "stop calling me",
+      "stop calling",
       "how did you get my number",
       "on the do not call list",
       "reporting you",
-      "this is harassment"
+      "this is harassment",
+      "calling the police",
+      "suing you",
+      "illegal"
     ],
-    "script": "I sincerely apologize for the inconvenience. I'll remove your number from our list right away. You won't receive any more calls from us. I hope you have a great rest of your day."
+    "script": "I sincerely apologize for the inconvenience. I'm removing your number from our list right now — you won't receive any more calls from us. I hope you have a great rest of your day."
+  },
+  {
+    "id": "commission-objection",
+    "category": "COMMISSION_OBJECTION",
+    "label": "Commission Concern",
+    "priority": 1,
+    "leadTypes": ["fsbo"],
+    "patterns": [
+      "commission",
+      "fees are too high",
+      "too much commission",
+      "percentage",
+      "six percent",
+      "five percent",
+      "how much do you charge",
+      "too expensive to list",
+      "save money by selling",
+      "not paying an agent",
+      "agent fees",
+      "why would i pay"
+    ],
+    "script": "I totally understand wanting to save on commission — that's smart business thinking. Here's something I share with a lot of FSBO sellers in San Diego: on average, agent-listed homes sell for significantly more than FSBO homes, even after commission. Our team spends $30,000 a month on marketing to get your home in front of qualified buyers — that's exposure you can't replicate on Zillow alone. What if I showed you, with real numbers from your neighborhood, how listing with us could actually net you more money even after our fee? No pressure — just the math."
+  },
+  {
+    "id": "want-to-try-myself",
+    "category": "WANT_TO_TRY_MYSELF",
+    "label": "Wants to Sell Solo",
+    "priority": 1,
+    "leadTypes": ["fsbo"],
+    "patterns": [
+      "do it myself",
+      "try it myself",
+      "sell it myself",
+      "don't need an agent",
+      "list it myself",
+      "sell it on my own",
+      "going to try",
+      "handle it ourselves",
+      "we can do it",
+      "for sale by owner",
+      "fsbo"
+    ],
+    "script": "I respect that 100% — you clearly know your home better than anyone. Here's what I'd suggest: give it a shot, and I'll be a resource for you either way. In the meantime, I can send you a free market analysis showing what comparable homes in your San Diego neighborhood actually sold for — not just what they listed for. That way you're pricing it right from day one. And if you decide you want help down the road, you'll already have my number."
+  },
+  {
+    "id": "tenant-issues",
+    "category": "TENANT_ISSUES",
+    "label": "Tenant / Landlord Issues",
+    "priority": 1,
+    "leadTypes": ["frbo"],
+    "patterns": [
+      "dealing with tenants",
+      "bad tenants",
+      "tenant problems",
+      "tired of being a landlord",
+      "don't want to be a landlord",
+      "property management",
+      "renting it out",
+      "renters",
+      "tenant won't leave",
+      "tenant not paying",
+      "rental headache",
+      "landlord"
+    ],
+    "script": "I hear you — being a landlord in San Diego isn't getting any easier with the new tenant protection laws and rising maintenance costs. A lot of rental property owners I work with have been surprised to learn just how much their property has appreciated. Have you thought about what you could do with that equity? Whether it's a 1031 exchange into something more passive or just cashing out at the top, I can show you the numbers. Would a free property valuation be useful?"
+  },
+  {
+    "id": "financial-distress",
+    "category": "FINANCIAL_DISTRESS",
+    "label": "Financial Hardship",
+    "priority": 1,
+    "leadTypes": ["pre-foreclosure"],
+    "patterns": [
+      "behind on payments",
+      "foreclosure",
+      "can't afford the mortgage",
+      "underwater",
+      "owe more than",
+      "struggling to pay",
+      "late on mortgage",
+      "bank is threatening",
+      "notice of default",
+      "can't make payments",
+      "falling behind",
+      "financial trouble",
+      "need to sell fast"
+    ],
+    "script": "I appreciate you taking my call, and I want you to know I'm reaching out to help, not to pressure you. I specialize in helping San Diego homeowners explore their options before things get more complicated. The good news is that San Diego property values have risen significantly — most homeowners in your situation actually have a lot more equity than they realize. Sometimes selling and walking away with cash in hand is the best path. Sometimes there are other options. Would it help to have a confidential conversation about what your home is worth and what options are available? Everything stays between us."
   }
 ]

@@ -1,4 +1,4 @@
-import { CHANNEL_PROSPECT, CHANNEL_REP } from '../types';
+import { CHANNEL_PROSPECT, CHANNEL_REP, LeadType } from '../types';
 import { DeepgramClient } from '../transcription/deepgram-client';
 import { TranscriptAccumulator } from '../transcription/transcript-accumulator';
 import { SuggestionGenerator } from '../ai/suggestion-generator';
@@ -19,12 +19,18 @@ export class AudioHandler {
   private conversationContext: ConversationContext;
   private sessionStore: SessionStore;
   private suggestionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private paused = false;
+  private deepgramStartTime: number | null = null;
+  private deepgramPausedDuration = 0;
+  private pauseStartTime: number | null = null;
 
   constructor(
     sessionId: string,
     resultEmitter: ResultEmitter,
     scriptStore: ScriptStore,
-    sessionStore: SessionStore
+    sessionStore: SessionStore,
+    practiceMode = false,
+    leadType?: LeadType
   ) {
     this.sessionId = sessionId;
     this.resultEmitter = resultEmitter;
@@ -33,7 +39,9 @@ export class AudioHandler {
     this.suggestionGenerator = new SuggestionGenerator(
       scriptStore,
       this.conversationContext,
-      resultEmitter
+      resultEmitter,
+      practiceMode,
+      leadType
     );
 
     this.prospectAccumulator = new TranscriptAccumulator('prospect');
@@ -41,6 +49,7 @@ export class AudioHandler {
   }
 
   start(): void {
+    this.deepgramStartTime = Date.now();
     this.prospectStream = new DeepgramClient(
       (text, isFinal) => this.onTranscript('prospect', text, isFinal)
     );
@@ -63,7 +72,25 @@ export class AudioHandler {
     this.repStream = null;
   }
 
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+    if (paused) {
+      this.pauseStartTime = Date.now();
+    } else if (this.pauseStartTime) {
+      this.deepgramPausedDuration += Date.now() - this.pauseStartTime;
+      this.pauseStartTime = null;
+    }
+  }
+
+  getDeepgramMinutes(): number {
+    if (!this.deepgramStartTime) return 0;
+    const elapsed = Date.now() - this.deepgramStartTime - this.deepgramPausedDuration;
+    // 2 streams (prospect + rep)
+    return (elapsed / 60000) * 2;
+  }
+
   handleAudioFrame(data: Buffer): void {
+    if (this.paused) return;
     if (data.length < 2) return;
 
     const channel = data[0];
@@ -74,6 +101,14 @@ export class AudioHandler {
     } else if (channel === CHANNEL_REP && this.repStream) {
       this.repStream.sendAudio(pcmData);
     }
+  }
+
+  getSuggestionGenerator(): SuggestionGenerator {
+    return this.suggestionGenerator;
+  }
+
+  getConversationContext(): ConversationContext {
+    return this.conversationContext;
   }
 
   private onTranscript(speaker: 'prospect' | 'rep', text: string, isFinal: boolean): void {
