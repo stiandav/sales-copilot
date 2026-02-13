@@ -89,6 +89,14 @@ const MSG = {
   function onCallStarted() {
     isCallActive = true;
     callControls.setActive(true);
+
+    // Clear previous call state
+    transcriptView.clear();
+    suggestionContainer.innerHTML = '';
+    previousSuggestions.innerHTML = '';
+    activeSuggestion = null;
+    suggestions.length = 0;
+
     emptyState.classList.add('hidden');
     transcriptSection.classList.remove('hidden');
     suggestionSection.classList.remove('hidden');

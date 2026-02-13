@@ -108,7 +108,10 @@ export class AudioHandler {
     }
 
     this.suggestionDebounceTimer = setTimeout(() => {
-      this.suggestionGenerator.processProspectUtterance(prospectText);
+      this.suggestionGenerator.processProspectUtterance(prospectText).catch((err) => {
+        console.error(`Suggestion generation failed [${this.sessionId}]:`, err);
+        this.resultEmitter.sendError('SUGGESTION_FAILED', 'Failed to generate suggestion');
+      });
     }, config.session.suggestionDebounceMs);
   }
 }

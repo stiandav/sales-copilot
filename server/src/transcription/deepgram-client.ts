@@ -8,6 +8,8 @@ export class DeepgramClient {
   private callback: TranscriptCallback;
   private reconnecting = false;
   private keepAliveInterval: ReturnType<typeof setInterval> | null = null;
+  private reconnectAttempts = 0;
+  private static readonly MAX_RECONNECT_ATTEMPTS = 5;
 
   constructor(callback: TranscriptCallback) {
     this.callback = callback;
@@ -36,6 +38,7 @@ export class DeepgramClient {
 
     this.ws.on('open', () => {
       console.log('Deepgram connection opened');
+      this.reconnectAttempts = 0;
       this.startKeepAlive();
     });
 
@@ -88,12 +91,19 @@ export class DeepgramClient {
   }
 
   private reconnect(): void {
+    this.reconnectAttempts++;
+    if (this.reconnectAttempts > DeepgramClient.MAX_RECONNECT_ATTEMPTS) {
+      console.error(`Deepgram reconnect failed after ${DeepgramClient.MAX_RECONNECT_ATTEMPTS} attempts, giving up`);
+      return;
+    }
+
+    const delay = Math.min(2000 * Math.pow(2, this.reconnectAttempts - 1), 16000);
     this.reconnecting = true;
-    console.log('Reconnecting to Deepgram in 2s...');
+    console.log(`Reconnecting to Deepgram in ${delay}ms (attempt ${this.reconnectAttempts}/${DeepgramClient.MAX_RECONNECT_ATTEMPTS})...`);
     setTimeout(() => {
       this.reconnecting = false;
       this.connect();
-    }, 2000);
+    }, delay);
   }
 
   private startKeepAlive(): void {
