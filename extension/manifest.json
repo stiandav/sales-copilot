@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Cold Call AI Assistant",
+  "version": "1.0.0",
+  "description": "Real-time AI cold calling coach for real estate sales reps",
+  "permissions": [
+    "tabCapture",
+    "activeTab",
+    "tabs",
+    "sidePanel",
+    "offscreen",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "action": {
+    "default_title": "Cold Call AI Assistant",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

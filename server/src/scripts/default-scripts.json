@@ -1,0 +1,154 @@
+[
+  {
+    "id": "not-interested-generic",
+    "category": "NOT_INTERESTED",
+    "variant": "generic",
+    "label": "Not Interested",
+    "priority": 1,
+    "patterns": [
+      "not interested",
+      "no thanks",
+      "no thank you",
+      "don't want",
+      "not looking",
+      "not for me",
+      "pass on that",
+      "i'll pass",
+      "no need"
+    ],
+    "script": "I completely understand, and I wouldn't expect you to be interested until you knew what we could actually do for you. Most homeowners I work with felt the same way initially. Would it be fair if I just shared one quick insight about what's happening with home values in your neighborhood? If it's not relevant, I'll never call again."
+  },
+  {
+    "id": "not-interested-firm",
+    "category": "NOT_INTERESTED",
+    "variant": "firm",
+    "label": "Not Interested (Firm)",
+    "priority": 2,
+    "patterns": [
+      "absolutely not",
+      "definitely not interested",
+      "stop calling",
+      "not interested at all",
+      "please don't call",
+      "never",
+      "not now not ever"
+    ],
+    "script": "I hear you, and I respect that completely. Before I let you go — I'm not trying to sell you anything today. I'm just the neighborhood specialist, and I put together a free home value report for your area. Can I email that over? No strings attached. If your plans change in the future, you'll have my number."
+  },
+  {
+    "id": "already-have-agent",
+    "category": "ALREADY_HAVE_AGENT",
+    "label": "Already Has Agent",
+    "priority": 1,
+    "patterns": [
+      "already have an agent",
+      "already working with",
+      "have a realtor",
+      "got an agent",
+      "my agent",
+      "already listed",
+      "using someone",
+      "friend is an agent",
+      "family member is",
+      "sister is a realtor",
+      "brother is a realtor"
+    ],
+    "script": "That's great that you have someone you trust. I'm not looking to step on any toes. Quick question though — are you locked into an exclusive agreement with them, or are you still exploring your options? Sometimes a second opinion on pricing can actually help you and your current agent get a better result."
+  },
+  {
+    "id": "bad-timing",
+    "category": "BAD_TIMING",
+    "label": "Bad Timing",
+    "priority": 1,
+    "patterns": [
+      "bad time",
+      "not a good time",
+      "call back later",
+      "busy right now",
+      "in a meeting",
+      "at work",
+      "driving",
+      "in the middle of",
+      "can't talk",
+      "call me back",
+      "another time",
+      "maybe later"
+    ],
+    "script": "I totally understand, I caught you at a busy moment. I'll be brief — just 30 seconds. I'm reaching out because homes in your area are selling for [X]% above what most owners expect. When would be the best time for a quick 5-minute chat? I'm available mornings or evenings — what works better for you?"
+  },
+  {
+    "id": "not-selling-general",
+    "category": "NOT_SELLING",
+    "variant": "general",
+    "label": "Not Selling",
+    "priority": 1,
+    "patterns": [
+      "not selling",
+      "not planning to sell",
+      "happy where we are",
+      "love our home",
+      "not moving",
+      "staying put",
+      "no plans to move",
+      "we're staying",
+      "not going anywhere"
+    ],
+    "script": "That's totally fine — most of the people I talk to aren't actively selling. The reason I'm calling is that your home has likely appreciated significantly. Would you be open to knowing what it's worth in today's market? No commitment at all. A lot of homeowners are surprised by the number and it helps with financial planning, refinancing, even insurance."
+  },
+  {
+    "id": "not-selling-just-bought",
+    "category": "NOT_SELLING",
+    "variant": "just_bought",
+    "label": "Just Bought / Just Signed",
+    "priority": 2,
+    "patterns": [
+      "just bought",
+      "just moved in",
+      "just closed",
+      "just signed",
+      "just purchased",
+      "just got this house",
+      "just settled"
+    ],
+    "script": "Congratulations on the new home! I know selling is the last thing on your mind right now. I actually call new homeowners to introduce myself as the neighborhood specialist. I track values in your area closely — would it be helpful if I sent you a quick annual update on your home's equity? It's great for tracking your investment, and if your plans change down the road, you'll already have a trusted contact."
+  },
+  {
+    "id": "price-concern",
+    "category": "PRICE_CONCERN",
+    "label": "Price Concern",
+    "priority": 1,
+    "patterns": [
+      "market is down",
+      "prices are dropping",
+      "not worth it",
+      "won't get enough",
+      "can't afford",
+      "too expensive",
+      "commission",
+      "fees are too high",
+      "not the right market",
+      "waiting for prices",
+      "market crash",
+      "housing bubble"
+    ],
+    "script": "I hear that concern a lot, and honestly it's smart to be thinking about timing. Here's what the data actually shows for your specific neighborhood — values have [increased/held steady] over the past 12 months. What if I put together a no-obligation market analysis for your home specifically? That way you're making decisions based on real numbers, not headlines. Would that be helpful?"
+  },
+  {
+    "id": "do-not-call",
+    "category": "DO_NOT_CALL",
+    "label": "Do Not Call",
+    "priority": 1,
+    "patterns": [
+      "do not call",
+      "take me off",
+      "remove my number",
+      "don't call again",
+      "stop calling me",
+      "how did you get my number",
+      "on the do not call list",
+      "reporting you",
+      "this is harassment"
+    ],
+    "script": "I sincerely apologize for the inconvenience. I'll remove your number from our list right away. You won't receive any more calls from us. I hope you have a great rest of your day."
+  }
+]
