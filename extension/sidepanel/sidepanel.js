@@ -2,6 +2,195 @@
 // Real-time AI sales copilot for real estate cold calling.
 // Practice + Voice Roleplay run 100% in browser. Live Call uses server.
 
+// ==================== AUTH GATE ====================
+(function () {
+  var authGate = document.getElementById('auth-gate');
+  var appMain = document.getElementById('app-main');
+  var loginForm = document.getElementById('auth-form-login');
+  var signupForm = document.getElementById('auth-form-signup');
+  var authTabLogin = document.getElementById('auth-tab-login');
+  var authTabSignup = document.getElementById('auth-tab-signup');
+  var loginEmailInput = document.getElementById('login-email');
+  var loginPasswordInput = document.getElementById('login-password');
+  var signupEmailInput = document.getElementById('signup-email');
+  var signupPasswordInput = document.getElementById('signup-password');
+  var btnLogin = document.getElementById('btn-login');
+  var btnSignup = document.getElementById('btn-signup');
+  var btnGoogle = document.getElementById('btn-google');
+  var authStatus = document.getElementById('auth-status');
+  var authConfirmMsg = document.getElementById('auth-confirm-msg');
+  var authBlocked = document.getElementById('auth-blocked');
+  var authToggle = document.getElementById('auth-toggle');
+  var btnAuthLogout = document.getElementById('btn-auth-logout');
+  var btnHeaderLogout = document.getElementById('btn-header-logout');
+  var headerUser = document.getElementById('header-user');
+
+  function showStatus(msg, color) {
+    authStatus.textContent = msg;
+    authStatus.style.color = color || 'var(--accent-red)';
+  }
+
+  function setLoading(btn, loading) {
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Please wait...' : btn.dataset.label;
+  }
+
+  // Store original button labels
+  if (btnLogin) btnLogin.dataset.label = btnLogin.textContent;
+  if (btnSignup) btnSignup.dataset.label = btnSignup.textContent;
+
+  // Skip auth gate if Supabase isn't configured (dev mode)
+  if (!SupabaseAuth.isConfigured()) {
+    authGate.classList.add('hidden');
+    appMain.classList.remove('hidden');
+    initApp();
+    return;
+  }
+
+  // ---- Toggle login/signup ----
+  if (authTabLogin) authTabLogin.addEventListener('click', function () {
+    authTabLogin.classList.add('auth-toggle__btn--active');
+    authTabSignup.classList.remove('auth-toggle__btn--active');
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+    authConfirmMsg.classList.add('hidden');
+    showStatus('', '');
+  });
+  if (authTabSignup) authTabSignup.addEventListener('click', function () {
+    authTabSignup.classList.add('auth-toggle__btn--active');
+    authTabLogin.classList.remove('auth-toggle__btn--active');
+    signupForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+    authConfirmMsg.classList.add('hidden');
+    showStatus('', '');
+  });
+
+  // ---- After auth succeeds, check whitelist then show app ----
+  function handleAuthSuccess(user) {
+    var email = user.email || (user.user_metadata && user.user_metadata.email) || '';
+    showStatus('Checking access...', 'var(--accent-blue)');
+
+    SupabaseAuth.checkWhitelist(email, function (allowed, row) {
+      if (allowed) {
+        // Access granted
+        authGate.classList.add('hidden');
+        appMain.classList.remove('hidden');
+        if (headerUser) headerUser.textContent = email;
+        showStatus('', '');
+        initApp();
+      } else {
+        // Not whitelisted
+        showStatus('', '');
+        loginForm.classList.add('hidden');
+        signupForm.classList.add('hidden');
+        authToggle.classList.add('hidden');
+        authConfirmMsg.classList.add('hidden');
+        if (btnGoogle) btnGoogle.classList.add('hidden');
+        var divider = document.querySelector('.auth-divider');
+        if (divider) divider.classList.add('hidden');
+        authBlocked.classList.remove('hidden');
+      }
+    });
+  }
+
+  // ---- Email login ----
+  if (btnLogin) btnLogin.addEventListener('click', function () {
+    var email = loginEmailInput.value.trim();
+    var password = loginPasswordInput.value;
+    if (!email || !password) { showStatus('Enter your email and password.'); return; }
+
+    setLoading(btnLogin, true);
+    SupabaseAuth.signIn(email, password, function (user, error) {
+      setLoading(btnLogin, false);
+      if (error) { showStatus(error); return; }
+      handleAuthSuccess(user);
+    });
+  });
+
+  // Enter key on password fields
+  if (loginPasswordInput) loginPasswordInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') btnLogin.click();
+  });
+  if (signupPasswordInput) signupPasswordInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') btnSignup.click();
+  });
+
+  // ---- Email signup ----
+  if (btnSignup) btnSignup.addEventListener('click', function () {
+    var email = signupEmailInput.value.trim();
+    var password = signupPasswordInput.value;
+    if (!email || !password) { showStatus('Enter your email and password.'); return; }
+    if (password.length < 6) { showStatus('Password must be at least 6 characters.'); return; }
+
+    setLoading(btnSignup, true);
+    SupabaseAuth.signUp(email, password, function (user, error) {
+      setLoading(btnSignup, false);
+      if (error === 'confirm_email') {
+        authConfirmMsg.classList.remove('hidden');
+        showStatus('', '');
+        return;
+      }
+      if (error) { showStatus(error); return; }
+      handleAuthSuccess(user);
+    });
+  });
+
+  // ---- Google sign-in ----
+  if (btnGoogle) btnGoogle.addEventListener('click', function () {
+    showStatus('Opening Google sign-in...', 'var(--accent-blue)');
+    SupabaseAuth.signInWithGoogle(function (user, error) {
+      if (error) { showStatus(error); return; }
+      handleAuthSuccess(user);
+    });
+  });
+
+  // ---- Sign out (from blocked screen) ----
+  if (btnAuthLogout) btnAuthLogout.addEventListener('click', function () {
+    SupabaseAuth.signOut(function () {
+      authBlocked.classList.add('hidden');
+      authToggle.classList.remove('hidden');
+      loginForm.classList.remove('hidden');
+      if (btnGoogle) btnGoogle.classList.remove('hidden');
+      var divider = document.querySelector('.auth-divider');
+      if (divider) divider.classList.remove('hidden');
+      authTabLogin.classList.add('auth-toggle__btn--active');
+      authTabSignup.classList.remove('auth-toggle__btn--active');
+      showStatus('', '');
+    });
+  });
+
+  // ---- Sign out (from header) ----
+  if (btnHeaderLogout) btnHeaderLogout.addEventListener('click', function () {
+    SupabaseAuth.signOut(function () {
+      appMain.classList.add('hidden');
+      authGate.classList.remove('hidden');
+      authBlocked.classList.add('hidden');
+      authToggle.classList.remove('hidden');
+      loginForm.classList.remove('hidden');
+      if (btnGoogle) btnGoogle.classList.remove('hidden');
+      var divider = document.querySelector('.auth-divider');
+      if (divider) divider.classList.remove('hidden');
+      showStatus('Signed out.', 'var(--text-dim)');
+    });
+  });
+
+  // ---- Auto-login: check for existing session ----
+  showStatus('Loading...', 'var(--text-dim)');
+  SupabaseAuth.loadSession(function (user) {
+    if (user) {
+      handleAuthSuccess(user);
+    } else {
+      showStatus('', '');
+    }
+  });
+})();
+
+// ==================== MAIN APP ====================
+function initApp() {
+  // Prevent double-init
+  if (window._appInitialized) return;
+  window._appInitialized = true;
+
 (function () {
   var engine = new ObjectionEngine();
 
@@ -1260,3 +1449,4 @@
   loadSavedData();
   practiceField.focus();
 })();
+} // end initApp

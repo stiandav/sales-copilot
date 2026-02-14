@@ -9,7 +9,11 @@
     "tabs",
     "sidePanel",
     "offscreen",
-    "storage"
+    "storage",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://*.supabase.co/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
