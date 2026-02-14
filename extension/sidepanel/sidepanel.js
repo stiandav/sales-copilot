@@ -63,6 +63,7 @@
   leadSelect.addEventListener('change', function () {
     renderScenarios();
     renderScriptLibrary();
+    buildQuickTapGrid();
   });
 
   // ==================== SCENARIOS ====================
@@ -589,11 +590,15 @@
     setTimeout(function () { keyStatus.textContent = ''; }, 2000);
   });
 
-  // ---- Build quick-tap grid ----
+  // ---- Build quick-tap grid (lead-type-specific) ----
   function buildQuickTapGrid() {
     if (!quickTapGrid) return;
     quickTapGrid.innerHTML = '';
-    var taps = (typeof QUICK_TAPS !== 'undefined') ? QUICK_TAPS : [];
+    var leadType = leadSelect ? leadSelect.value : '';
+    var taps = [];
+    if (typeof QUICK_TAPS !== 'undefined') {
+      taps = QUICK_TAPS[leadType] || QUICK_TAPS[''] || [];
+    }
     taps.forEach(function (tap) {
       var btn = document.createElement('button');
       btn.className = 'quick-tap-btn';
