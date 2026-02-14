@@ -10,7 +10,6 @@
   var modePractice = document.getElementById('mode-practice');
   var modeLive = document.getElementById('mode-live');
   var modeScripts = document.getElementById('mode-scripts');
-  var modeVoice = document.getElementById('mode-voice');
   var leadSelect = document.getElementById('lead-type');
   var scenarioGrid = document.getElementById('scenario-grid');
   var practiceField = document.getElementById('practice-field');
@@ -19,9 +18,14 @@
   var emptyHint = document.getElementById('empty-hint-practice');
   var scriptLibrary = document.getElementById('script-library');
 
+  // Practice sub-sections
+  var practiceTextSection = document.getElementById('practice-text-section');
+  var practiceVoiceSection = document.getElementById('practice-voice-section');
+  var subTextBtn = document.getElementById('sub-text');
+  var subVoiceBtn = document.getElementById('sub-voice');
+
   var modes = {
     practice: modePractice,
-    voice: modeVoice,
     live: modeLive,
     scripts: modeScripts,
   };
@@ -38,6 +42,23 @@
       if (mode === 'scripts') renderScriptLibrary();
     });
   });
+
+  // ---- Practice sub-toggle (Text / Voice Roleplay) ----
+  function switchPracticeSub(sub) {
+    if (sub === 'voice') {
+      practiceTextSection.classList.add('hidden');
+      practiceVoiceSection.classList.remove('hidden');
+      subTextBtn.classList.remove('practice-toggle__btn--active');
+      subVoiceBtn.classList.add('practice-toggle__btn--active');
+    } else {
+      practiceTextSection.classList.remove('hidden');
+      practiceVoiceSection.classList.add('hidden');
+      subTextBtn.classList.add('practice-toggle__btn--active');
+      subVoiceBtn.classList.remove('practice-toggle__btn--active');
+    }
+  }
+  subTextBtn.addEventListener('click', function () { switchPracticeSub('text'); });
+  subVoiceBtn.addEventListener('click', function () { switchPracticeSub('voice'); });
 
   leadSelect.addEventListener('change', function () {
     renderScenarios();

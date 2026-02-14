@@ -133,6 +133,34 @@ body {
   overflow-y: auto;
 }
 
+/* Practice Sub-Toggle */
+.practice-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+.practice-toggle__btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.practice-toggle__btn--active {
+  background: var(--bg-highlight);
+  color: var(--text-primary);
+}
+.practice-toggle__btn:hover:not(.practice-toggle__btn--active) {
+  color: var(--text-primary);
+}
+
 /* Scenarios */
 .section-label {
   font-size: 11px;

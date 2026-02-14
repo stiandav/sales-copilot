@@ -20,7 +20,6 @@
     <!-- Mode Tabs -->
     <div class="mode-tabs">
       <button class="mode-tab mode-tab--active" data-mode="practice" id="tab-practice">Practice</button>
-      <button class="mode-tab" data-mode="voice" id="tab-voice">Voice Roleplay</button>
       <button class="mode-tab" data-mode="live" id="tab-live">Live Call</button>
       <button class="mode-tab" data-mode="scripts" id="tab-scripts">Scripts</button>
     </div>
@@ -38,35 +37,43 @@
 
     <!-- ==================== PRACTICE MODE ==================== -->
     <div class="mode-content" id="mode-practice">
-      <div class="scenarios" id="scenarios">
-        <div class="section-label">Click a common objection to practice:</div>
-        <div class="scenario-grid" id="scenario-grid"></div>
+      <!-- Sub-toggle: Text vs Voice -->
+      <div class="practice-toggle">
+        <button class="practice-toggle__btn practice-toggle__btn--active" data-sub="text" id="sub-text">Text</button>
+        <button class="practice-toggle__btn" data-sub="voice" id="sub-voice">Voice Roleplay</button>
       </div>
 
-      <div class="practice-input" id="practice-input">
-        <div class="section-label">Or type what the prospect says:</div>
-        <div class="practice-input__row">
-          <input type="text" class="practice-input__field" id="practice-field"
-            placeholder='e.g. "We already tried selling and it didn&apos;t work"'
-            autocomplete="off">
-          <button class="btn btn--send" id="practice-send">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M1.7 1.2l13 6.3a.5.5 0 010 .9l-13 6.3a.5.5 0 01-.7-.6L3 8 1 2a.5.5 0 01.7-.8z"/>
-            </svg>
-          </button>
+      <!-- TEXT PRACTICE -->
+      <div id="practice-text-section">
+        <div class="scenarios" id="scenarios">
+          <div class="section-label">Click a common objection to practice:</div>
+          <div class="scenario-grid" id="scenario-grid"></div>
+        </div>
+
+        <div class="practice-input" id="practice-input">
+          <div class="section-label">Or type what the prospect says:</div>
+          <div class="practice-input__row">
+            <input type="text" class="practice-input__field" id="practice-field"
+              placeholder='e.g. "We already tried selling and it didn&apos;t work"'
+              autocomplete="off">
+            <button class="btn btn--send" id="practice-send">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M1.7 1.2l13 6.3a.5.5 0 010 .9l-13 6.3a.5.5 0 01-.7-.6L3 8 1 2a.5.5 0 01.7-.8z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Copilot Output (Practice) -->
+        <div id="copilot-practice"></div>
+
+        <div class="empty-hint" id="empty-hint-practice">
+          <p>Select a lead type above, then click an objection or type one to see real-time coaching.</p>
         </div>
       </div>
 
-      <!-- Copilot Output (Practice) -->
-      <div id="copilot-practice"></div>
-
-      <div class="empty-hint" id="empty-hint-practice">
-        <p>Select a lead type above, then click an objection or type one to see real-time coaching.</p>
-      </div>
-    </div>
-
-    <!-- ==================== VOICE ROLEPLAY MODE ==================== -->
-    <div class="mode-content hidden" id="mode-voice">
+      <!-- VOICE ROLEPLAY (inside practice tab) -->
+      <div class="hidden" id="practice-voice-section">
       <div class="voice-setup" id="voice-setup">
         <div class="voice-setup__icon">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -145,7 +152,8 @@
         <div class="voice-summary__stats" id="summary-stats"></div>
         <button class="btn btn--call-start" id="voice-retry">Practice Again</button>
       </div>
-    </div>
+      </div><!-- /practice-voice-section -->
+    </div><!-- /mode-practice -->
 
     <!-- ==================== LIVE CALL MODE ==================== -->
     <div class="mode-content hidden" id="mode-live">
