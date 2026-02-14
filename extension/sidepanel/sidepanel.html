@@ -36,7 +36,7 @@
       </select>
     </div>
 
-    <!-- ==================== PRACTICE MODE (text) ==================== -->
+    <!-- ==================== PRACTICE MODE ==================== -->
     <div class="mode-content" id="mode-practice">
       <div class="scenarios" id="scenarios">
         <div class="section-label">Click a common objection to practice:</div>
@@ -57,23 +57,16 @@
         </div>
       </div>
 
-      <div class="transcript-section" id="transcript-section-practice">
-        <div class="transcript" id="transcript-practice"></div>
-      </div>
-
-      <div class="suggestion-section" id="suggestion-section-practice">
-        <div id="suggestion-container-practice"></div>
-      </div>
+      <!-- Copilot Output (Practice) -->
+      <div id="copilot-practice"></div>
 
       <div class="empty-hint" id="empty-hint-practice">
-        <p>Select a lead type above, then click an objection or type one to see the perfect response instantly.</p>
+        <p>Select a lead type above, then click an objection or type one to see real-time coaching.</p>
       </div>
     </div>
 
     <!-- ==================== VOICE ROLEPLAY MODE ==================== -->
     <div class="mode-content hidden" id="mode-voice">
-
-      <!-- Pre-call setup -->
       <div class="voice-setup" id="voice-setup">
         <div class="voice-setup__icon">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -84,7 +77,7 @@
           </svg>
         </div>
         <h3>Voice Practice Call</h3>
-        <p>Practice cold calling a simulated prospect. They'll answer the phone and respond with real objections. You speak your pitch and the AI coaches you on what to say.</p>
+        <p>Practice cold calling a simulated prospect. They answer the phone and respond with real objections. You speak your pitch and the AI coaches you on what to say.</p>
 
         <div class="voice-setup__options">
           <div class="section-label">Difficulty</div>
@@ -104,7 +97,6 @@
         <p class="voice-setup__hint">Uses your microphone. No data leaves your browser.</p>
       </div>
 
-      <!-- Active call -->
       <div class="voice-call hidden" id="voice-call">
         <div class="voice-call__header">
           <div class="voice-call__prospect-info">
@@ -121,16 +113,13 @@
           <div class="voice-call__timer" id="voice-timer">00:00</div>
         </div>
 
-        <!-- Conversation -->
         <div class="voice-conversation" id="voice-conversation"></div>
 
-        <!-- Coach suggestion -->
         <div class="voice-coach hidden" id="voice-coach">
           <div class="voice-coach__label">SAY THIS:</div>
           <div class="voice-coach__script" id="voice-coach-script"></div>
         </div>
 
-        <!-- Mic indicator -->
         <div class="voice-mic-bar" id="voice-mic-bar">
           <div class="voice-mic-bar__status" id="voice-mic-status">
             <div class="mic-icon mic-icon--listening" id="mic-icon">
@@ -145,13 +134,11 @@
           <div class="voice-mic-bar__interim" id="voice-interim"></div>
         </div>
 
-        <!-- Controls -->
         <div class="voice-controls">
           <button class="btn btn--voice-end" id="voice-end">End Call</button>
         </div>
       </div>
 
-      <!-- Post-call summary -->
       <div class="voice-summary hidden" id="voice-summary">
         <h3 class="voice-summary__title" id="summary-title">Call Complete</h3>
         <div class="voice-summary__result" id="summary-result"></div>
@@ -180,16 +167,26 @@
         <span class="cost-bar__detail" id="cost-detail"></span>
       </div>
 
-      <div class="transcript-section hidden" id="transcript-section-live">
-        <div class="section-label">Live Transcript</div>
-        <div class="transcript" id="transcript-live"></div>
+      <!-- Live copilot area -->
+      <div class="hidden" id="live-copilot-area">
+        <!-- Latest prospect speech -->
+        <div class="live-prospect-bar" id="live-prospect-bar">
+          <div class="live-prospect-bar__label">
+            <span class="live-dot"></span>
+            Prospect
+          </div>
+          <div class="live-prospect-bar__text" id="live-prospect-text"></div>
+        </div>
+
+        <!-- Copilot output -->
+        <div id="copilot-live"></div>
       </div>
 
-      <div class="suggestion-section hidden" id="suggestion-section-live">
-        <div class="section-label">Say This</div>
-        <div id="suggestion-container-live"></div>
-        <div id="previous-suggestions-live"></div>
-      </div>
+      <!-- Transcript (collapsed by default during live) -->
+      <details class="transcript-details hidden" id="transcript-details-live">
+        <summary class="transcript-details__summary">Full Transcript</summary>
+        <div class="transcript" id="transcript-live"></div>
+      </details>
 
       <div class="live-setup" id="live-setup">
         <div class="live-setup__icon">
@@ -198,11 +195,11 @@
           </svg>
         </div>
         <h3>Live Call Mode</h3>
-        <p>Requires the server running locally.</p>
+        <p>Real-time AI coaching during your actual calls.</p>
         <ol>
-          <li>Open your dialer in a Chrome tab</li>
+          <li>Open your dialer (Mojo, Vulcan7, etc.) in a Chrome tab</li>
           <li>Run <code>cd server && npm run dev</code> in Terminal</li>
-          <li>Click <strong>Start Call</strong> on the dialer tab</li>
+          <li>Click <strong>Start Call</strong> while on the dialer tab</li>
         </ol>
         <p class="live-setup__hint">Use <strong>Practice</strong> or <strong>Voice Roleplay</strong> to learn scripts first — no setup needed.</p>
       </div>
@@ -216,6 +213,7 @@
 
   <script src="data/scripts-data.js"></script>
   <script src="engine/objection-engine.js"></script>
+  <script src="engine/diagnosis-engine.js"></script>
   <script src="engine/prospect-ai.js"></script>
   <script src="sidepanel.js"></script>
 </body>

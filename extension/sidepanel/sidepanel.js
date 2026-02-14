@@ -1,10 +1,11 @@
 // ========== COLD CALL AI — Main Controller ==========
-// Practice mode runs 100% locally in the browser. No server, no API keys, no setup.
+// Real-time AI sales copilot for real estate cold calling.
+// Practice + Voice Roleplay run 100% in browser. Live Call uses server.
 
 (function () {
   var engine = new ObjectionEngine();
 
-  // DOM refs — tabs + modes
+  // DOM refs
   var modeTabs = document.querySelectorAll('.mode-tab');
   var modePractice = document.getElementById('mode-practice');
   var modeLive = document.getElementById('mode-live');
@@ -14,8 +15,7 @@
   var scenarioGrid = document.getElementById('scenario-grid');
   var practiceField = document.getElementById('practice-field');
   var practiceSend = document.getElementById('practice-send');
-  var transcriptEl = document.getElementById('transcript-practice');
-  var suggestionContainer = document.getElementById('suggestion-container-practice');
+  var copilotPractice = document.getElementById('copilot-practice');
   var emptyHint = document.getElementById('empty-hint-practice');
   var scriptLibrary = document.getElementById('script-library');
 
@@ -32,16 +32,13 @@
       var mode = tab.dataset.mode;
       modeTabs.forEach(function (t) { t.classList.remove('mode-tab--active'); });
       tab.classList.add('mode-tab--active');
-
       Object.entries(modes).forEach(function (entry) {
         entry[1].classList.toggle('hidden', entry[0] !== mode);
       });
-
       if (mode === 'scripts') renderScriptLibrary();
     });
   });
 
-  // ==================== LEAD TYPE CHANGE ====================
   leadSelect.addEventListener('change', function () {
     renderScenarios();
     renderScriptLibrary();
@@ -52,7 +49,6 @@
     var leadType = leadSelect.value;
     var scenarios = engine.getScenariosForLeadType(leadType);
     scenarioGrid.innerHTML = '';
-
     scenarios.forEach(function (s) {
       var btn = document.createElement('button');
       btn.className = 'scenario-btn';
@@ -70,7 +66,6 @@
       practiceField.value = '';
     }
   });
-
   practiceSend.addEventListener('click', function () {
     if (practiceField.value.trim()) {
       handleProspectText(practiceField.value.trim());
@@ -78,73 +73,109 @@
     }
   });
 
-  // ==================== CORE: PROCESS PROSPECT TEXT ====================
+  // ==================== COPILOT OUTPUT (shared renderer) ====================
   function handleProspectText(text) {
     emptyHint.classList.add('hidden');
-    addTranscriptEntry('prospect', text);
-
-    var match = engine.detect(text);
-    if (match) {
-      showSuggestion(match);
+    var result = DiagnosisEngine.diagnose(text);
+    if (result) {
+      renderCopilotOutput(copilotPractice, result);
     }
-
-    suggestionContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    copilotPractice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  function addTranscriptEntry(speaker, text) {
-    var entry = document.createElement('div');
-    entry.className = 'transcript-entry transcript-entry--' + speaker;
+  function renderCopilotOutput(container, result) {
+    container.innerHTML = '';
 
-    var label = document.createElement('span');
-    label.className = 'speaker-label speaker-label--' + speaker;
-    label.textContent = speaker === 'prospect' ? 'Prospect' : 'You';
+    var wrap = document.createElement('div');
+    wrap.className = 'copilot';
 
-    var textEl = document.createElement('span');
-    textEl.className = 'transcript-text';
-    textEl.textContent = text;
+    // -- Prospect quote
+    var quoteEl = document.createElement('div');
+    quoteEl.className = 'copilot__quote';
+    quoteEl.innerHTML =
+      '<span class="copilot__quote-icon">"</span>' +
+      '<span class="copilot__quote-text">' + esc(result.prospectText) + '</span>';
+    wrap.appendChild(quoteEl);
 
-    entry.appendChild(label);
-    entry.appendChild(textEl);
-    transcriptEl.appendChild(entry);
-  }
-
-  function showSuggestion(match) {
-    var script = match.script;
-    var colors = CATEGORY_COLORS[script.category] || { bg: 'rgba(168,85,247,0.15)', text: '#c084fc' };
-
-    suggestionContainer.innerHTML = '';
-
-    var card = document.createElement('div');
-    card.className = 'suggestion-card';
-
-    var matchLabel = '';
-    if (match.matchType === 'keyword') {
-      matchLabel = '<span class="match-type match-type--keyword">Keyword Match</span>';
-    } else if (match.matchType === 'bridge') {
-      matchLabel = '<span class="match-type match-type--bridge">Smart Response</span>';
+    // -- Signal badge
+    if (result.signal) {
+      var signalEl = document.createElement('div');
+      signalEl.className = 'copilot__signal';
+      signalEl.innerHTML =
+        '<span class="copilot__signal-label">Signal</span>' +
+        '<span class="copilot__signal-value">' + esc(result.signal.label) + '</span>';
+      wrap.appendChild(signalEl);
     }
 
-    var triggerHtml = '';
-    if (match.matchType === 'exact') {
-      triggerHtml = '<div class="suggestion-card__trigger">Matched: "' + escapeHtml(match.matchedPattern) + '"</div>';
-    } else if (match.matchType === 'keyword') {
-      triggerHtml = '<div class="suggestion-card__trigger">Keywords matched: ' + escapeHtml(match.matchedPattern) + '</div>';
-    } else {
-      triggerHtml = '<div class="suggestion-card__trigger">Responding to: "' + escapeHtml(match.triggerText) + '"</div>';
+    // -- Diagnosis
+    var diagEl = document.createElement('div');
+    diagEl.className = 'copilot__diagnosis';
+    diagEl.innerHTML =
+      '<div class="copilot__diagnosis-label">Diagnosis</div>' +
+      '<div class="copilot__diagnosis-text">' + esc(result.diagnosis) + '</div>';
+    wrap.appendChild(diagEl);
+
+    // -- Response Options
+    var optsEl = document.createElement('div');
+    optsEl.className = 'copilot__options';
+    optsEl.innerHTML = '<div class="copilot__options-label">Options</div>';
+
+    result.options.forEach(function (opt, idx) {
+      var optEl = document.createElement('div');
+      optEl.className = 'copilot__option' + (idx === 0 ? ' copilot__option--recommended' : '');
+
+      optEl.innerHTML =
+        '<div class="copilot__option-header">' +
+          '<span class="copilot__option-name">' + esc(opt.label) + '</span>' +
+          (idx === 0 ? '<span class="copilot__option-badge">Recommended</span>' : '') +
+        '</div>' +
+        '<div class="copilot__option-script">' + esc(opt.script) + '</div>' +
+        '<div class="copilot__option-why"><span class="why-label">Why:</span> ' + esc(opt.why) + '</div>';
+
+      // Click to expand/select
+      var header = optEl.querySelector('.copilot__option-header');
+      var scriptDiv = optEl.querySelector('.copilot__option-script');
+      var whyDiv = optEl.querySelector('.copilot__option-why');
+
+      if (idx !== 0) {
+        scriptDiv.classList.add('collapsed');
+        whyDiv.classList.add('collapsed');
+      }
+
+      header.style.cursor = 'pointer';
+      header.addEventListener('click', function () {
+        scriptDiv.classList.toggle('collapsed');
+        whyDiv.classList.toggle('collapsed');
+      });
+
+      optsEl.appendChild(optEl);
+    });
+
+    wrap.appendChild(optsEl);
+
+    // -- Battle Card
+    if (result.battleCard) {
+      var bcEl = document.createElement('div');
+      bcEl.className = 'copilot__battlecard';
+      bcEl.innerHTML =
+        '<div class="copilot__bc-header">' +
+          '<span class="copilot__bc-flag">vs</span>' +
+          '<span class="copilot__bc-name">' + esc(result.battleCard.competitor) + '</span>' +
+        '</div>';
+
+      result.battleCard.angles.forEach(function (angle) {
+        var aEl = document.createElement('div');
+        aEl.className = 'copilot__bc-angle';
+        aEl.innerHTML =
+          '<div class="copilot__bc-angle-title">' + esc(angle.title) + '</div>' +
+          '<div class="copilot__bc-angle-text">' + esc(angle.text) + '</div>';
+        bcEl.appendChild(aEl);
+      });
+
+      wrap.appendChild(bcEl);
     }
 
-    card.innerHTML =
-      '<div class="suggestion-card__header">' +
-        '<span class="objection-badge" style="background:' + colors.bg + ';color:' + colors.text + '">' +
-          escapeHtml(script.label) +
-        '</span>' +
-        matchLabel +
-      '</div>' +
-      '<div class="suggestion-card__say-label">SAY THIS:</div>' +
-      '<div class="suggestion-card__script">' + escapeHtml(script.script) + '</div>' +
-      triggerHtml;
-
-    suggestionContainer.appendChild(card);
+    container.appendChild(wrap);
   }
 
   // ==================== SCRIPT LIBRARY ====================
@@ -152,25 +183,20 @@
     var leadType = leadSelect.value;
     var scripts = engine.getScriptsForLeadType(leadType);
     scriptLibrary.innerHTML = '';
-
     scripts.forEach(function (s) {
       var card = document.createElement('div');
       card.className = 'script-card';
-
       var leadTags = (s.leadTypes || [])
         .map(function (lt) { return '<span class="script-card__lead-tag">' + (LEAD_TYPE_LABELS[lt] || lt) + '</span>'; })
         .join(' ');
-
       var topPatterns = s.patterns.slice(0, 5).map(function (p) { return '"' + p + '"'; }).join(', ');
-
       card.innerHTML =
         '<div class="script-card__header">' +
-          '<span class="script-card__label">' + escapeHtml(s.label) + '</span>' +
+          '<span class="script-card__label">' + esc(s.label) + '</span>' +
           leadTags +
         '</div>' +
-        '<div class="script-card__patterns">Triggers: ' + escapeHtml(topPatterns) + '</div>' +
-        '<div class="script-card__body">' + escapeHtml(s.script) + '</div>';
-
+        '<div class="script-card__patterns">Triggers: ' + esc(topPatterns) + '</div>' +
+        '<div class="script-card__body">' + esc(s.script) + '</div>';
       scriptLibrary.appendChild(card);
     });
   }
@@ -203,9 +229,7 @@
   var selectedDifficulty = 'medium';
   var isVoiceCallActive = false;
   var isProspectSpeaking = false;
-  var pendingAgentText = '';
 
-  // Difficulty buttons
   diffBtns.forEach(function (btn) {
     btn.addEventListener('click', function () {
       diffBtns.forEach(function (b) { b.classList.remove('diff-btn--active'); });
@@ -214,7 +238,6 @@
     });
   });
 
-  // Start voice call
   voiceStart.addEventListener('click', startVoiceCall);
   voiceEnd.addEventListener('click', endVoiceCall);
   voiceRetry.addEventListener('click', function () {
@@ -223,27 +246,20 @@
   });
 
   function startVoiceCall() {
-    // Determine lead type — default to expired if none selected
     var leadType = leadSelect.value || 'expired';
     if (!leadSelect.value) leadSelect.value = 'expired';
-
     prospect = new ProspectAI(leadType, selectedDifficulty);
     isVoiceCallActive = true;
-    pendingAgentText = '';
 
-    // Switch UI
     voiceSetup.classList.add('hidden');
     voiceSummary.classList.add('hidden');
     voiceCall.classList.remove('hidden');
     voiceCoach.classList.add('hidden');
     voiceConversation.innerHTML = '';
     voiceInterim.textContent = '';
-
-    // Set prospect info
     voiceName.textContent = prospect.prospectName;
     voiceLeadTag.textContent = LEAD_TYPE_LABELS[leadType] || leadType;
 
-    // Start timer
     voiceStartTime = Date.now();
     voiceTimerEl.textContent = '00:00';
     voiceTimerInterval = setInterval(function () {
@@ -251,17 +267,13 @@
       voiceTimerEl.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
     }, 1000);
 
-    // Phone ringing effect then prospect greeting
     addVoiceBubble('system', 'Calling ' + prospect.prospectName + '...');
-
     setTimeout(function () {
       if (!isVoiceCallActive) return;
       addVoiceBubble('system', 'Connected');
-      var greeting = prospect.getGreeting();
-
       setTimeout(function () {
         if (!isVoiceCallActive) return;
-        prospectSays(greeting);
+        prospectSays(prospect.getGreeting());
       }, 800);
     }, 1500);
   }
@@ -271,10 +283,8 @@
     micStatusText.textContent = 'Prospect speaking...';
     micIcon.classList.remove('mic-icon--listening');
     micIcon.classList.add('mic-icon--prospect');
-
     addVoiceBubble('prospect', text);
 
-    // Detect objection and show coaching
     var match = engine.detect(text);
     if (match) {
       voiceCoach.classList.remove('hidden');
@@ -282,54 +292,38 @@
       voiceCoach.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // Speak it via TTS
     speakText(text, function () {
       if (!isVoiceCallActive) return;
       isProspectSpeaking = false;
-
-      // Check if call is over
       if (prospect.appointmentSet || prospect.hungUp) {
-        setTimeout(function () { endVoiceCall(); }, 1000);
+        setTimeout(endVoiceCall, 1000);
         return;
       }
-
-      // Start listening
       startListening();
     });
   }
 
   function agentSaid(text) {
     if (!text.trim() || !isVoiceCallActive) return;
-
     addVoiceBubble('agent', text);
-
-    // Get prospect response
     var response = prospect.respond(text);
     if (response) {
-      // Small pause before prospect responds
       setTimeout(function () {
         if (!isVoiceCallActive) return;
         prospectSays(response);
       }, 1200);
     } else {
-      // Conversation ended
-      setTimeout(function () { endVoiceCall(); }, 1000);
+      setTimeout(endVoiceCall, 1000);
     }
   }
 
   function endVoiceCall() {
     isVoiceCallActive = false;
     stopListening();
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (voiceTimerInterval) { clearInterval(voiceTimerInterval); voiceTimerInterval = null; }
 
-    if (voiceTimerInterval) {
-      clearInterval(voiceTimerInterval);
-      voiceTimerInterval = null;
-    }
-
-    // Get summary
     var summary = prospect ? prospect.getCallSummary() : null;
-
     voiceCall.classList.add('hidden');
     voiceSummary.classList.remove('hidden');
 
@@ -341,21 +335,15 @@
       if (summary.result === 'appointment') {
         summaryTitle.textContent = 'Appointment Set!';
         summaryTitle.style.color = 'var(--accent-green)';
-        summaryResult.innerHTML =
-          '<div class="summary-badge summary-badge--success">SUCCESS</div>' +
-          '<p>' + escapeHtml(summary.prospectName) + ' agreed to an appointment!</p>';
+        summaryResult.innerHTML = '<div class="summary-badge summary-badge--success">SUCCESS</div><p>' + esc(summary.prospectName) + ' agreed to an appointment!</p>';
       } else if (summary.result === 'hung_up') {
         summaryTitle.textContent = 'Prospect Hung Up';
         summaryTitle.style.color = 'var(--accent-red)';
-        summaryResult.innerHTML =
-          '<div class="summary-badge summary-badge--fail">HUNG UP</div>' +
-          '<p>' + escapeHtml(summary.prospectName) + ' ended the call.</p>';
+        summaryResult.innerHTML = '<div class="summary-badge summary-badge--fail">HUNG UP</div><p>' + esc(summary.prospectName) + ' ended the call.</p>';
       } else {
         summaryTitle.textContent = 'Call Ended';
         summaryTitle.style.color = 'var(--text-primary)';
-        summaryResult.innerHTML =
-          '<div class="summary-badge summary-badge--neutral">ENDED</div>' +
-          '<p>The conversation ended without a clear outcome.</p>';
+        summaryResult.innerHTML = '<div class="summary-badge summary-badge--neutral">ENDED</div><p>The conversation ended without a clear outcome.</p>';
       }
 
       summaryStats.innerHTML =
@@ -366,54 +354,38 @@
     }
   }
 
-  // ==================== SPEECH RECOGNITION (STT) ====================
+  // ==================== SPEECH RECOGNITION ====================
   function startListening() {
     if (!isVoiceCallActive || isProspectSpeaking) return;
-
     micStatusText.textContent = 'Listening... speak your response';
     micIcon.classList.add('mic-icon--listening');
     micIcon.classList.remove('mic-icon--prospect');
     voiceInterim.textContent = '';
     voiceCoach.classList.remove('hidden');
 
-    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      micStatusText.textContent = 'Speech not supported — type below';
-      showVoiceFallbackInput();
-      return;
-    }
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { micStatusText.textContent = 'Speech not supported — type below'; showVoiceFallbackInput(); return; }
 
-    recognition = new SpeechRecognition();
+    recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-
     var finalText = '';
     var silenceTimer = null;
 
     recognition.onresult = function (event) {
-      var interim = '';
-      finalText = '';
-
+      var interim = ''; finalText = '';
       for (var i = 0; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalText += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
+        if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
+        else interim += event.results[i][0].transcript;
       }
-
       voiceInterim.textContent = interim || finalText;
-
-      // Reset silence timer
       clearTimeout(silenceTimer);
       silenceTimer = setTimeout(function () {
-        // User stopped speaking for 2 seconds
         if (finalText.trim() || interim.trim()) {
-          var text = (finalText + ' ' + interim).trim();
           recognition.stop();
           voiceInterim.textContent = '';
-          agentSaid(text);
+          agentSaid((finalText + ' ' + interim).trim());
         }
       }, 2000);
     };
@@ -422,170 +394,84 @@
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         micStatusText.textContent = 'Microphone blocked — check permissions';
         showVoiceFallbackInput();
-      } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
-        micStatusText.textContent = 'Listening...';
       }
     };
 
     recognition.onend = function () {
-      // If call is still active and we didn't get text, restart
       if (isVoiceCallActive && !isProspectSpeaking) {
         var text = voiceInterim.textContent.trim();
-        if (text) {
-          voiceInterim.textContent = '';
-          agentSaid(text);
-        } else {
-          // Try restarting recognition
-          try {
-            recognition.start();
-          } catch (e) {
-            // Already started or ended — ignore
-          }
-        }
+        if (text) { voiceInterim.textContent = ''; agentSaid(text); }
+        else { try { recognition.start(); } catch (e) {} }
       }
     };
 
-    try {
-      recognition.start();
-    } catch (e) {
-      micStatusText.textContent = 'Could not start mic';
-      showVoiceFallbackInput();
-    }
+    try { recognition.start(); } catch (e) { micStatusText.textContent = 'Could not start mic'; showVoiceFallbackInput(); }
   }
 
   function stopListening() {
-    if (recognition) {
-      try { recognition.stop(); } catch (e) { /* ignore */ }
-      recognition = null;
-    }
+    if (recognition) { try { recognition.stop(); } catch (e) {} recognition = null; }
   }
 
   function showVoiceFallbackInput() {
-    // Show a text input as fallback when mic doesn't work
-    var existing = document.getElementById('voice-fallback');
-    if (existing) return;
-
+    if (document.getElementById('voice-fallback')) return;
     var row = document.createElement('div');
-    row.className = 'practice-input__row';
-    row.id = 'voice-fallback';
-    row.innerHTML =
-      '<input type="text" class="practice-input__field" id="voice-fallback-field" placeholder="Type your response here..." autocomplete="off">' +
-      '<button class="btn btn--send" id="voice-fallback-send">' +
-        '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">' +
-          '<path d="M1.7 1.2l13 6.3a.5.5 0 010 .9l-13 6.3a.5.5 0 01-.7-.6L3 8 1 2a.5.5 0 01.7-.8z"/>' +
-        '</svg>' +
-      '</button>';
-
-    var micBar = document.getElementById('voice-mic-bar');
-    micBar.parentNode.insertBefore(row, micBar.nextSibling);
-
+    row.className = 'practice-input__row'; row.id = 'voice-fallback';
+    row.innerHTML = '<input type="text" class="practice-input__field" id="voice-fallback-field" placeholder="Type your response..." autocomplete="off"><button class="btn btn--send" id="voice-fallback-send"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1.7 1.2l13 6.3a.5.5 0 010 .9l-13 6.3a.5.5 0 01-.7-.6L3 8 1 2a.5.5 0 01.7-.8z"/></svg></button>';
+    document.getElementById('voice-mic-bar').parentNode.insertBefore(row, document.getElementById('voice-mic-bar').nextSibling);
     var field = document.getElementById('voice-fallback-field');
-    var sendBtn = document.getElementById('voice-fallback-send');
-
-    field.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && field.value.trim()) {
-        agentSaid(field.value.trim());
-        field.value = '';
-      }
-    });
-    sendBtn.addEventListener('click', function () {
-      if (field.value.trim()) {
-        agentSaid(field.value.trim());
-        field.value = '';
-      }
-    });
-
+    field.addEventListener('keydown', function (e) { if (e.key === 'Enter' && field.value.trim()) { agentSaid(field.value.trim()); field.value = ''; } });
+    document.getElementById('voice-fallback-send').addEventListener('click', function () { if (field.value.trim()) { agentSaid(field.value.trim()); field.value = ''; } });
     field.focus();
   }
 
-  // ==================== TEXT-TO-SPEECH (TTS) ====================
+  // ==================== TTS ====================
   function speakText(text, onDone) {
-    if (!window.speechSynthesis) {
-      if (onDone) setTimeout(onDone, 1500);
-      return;
-    }
-
+    if (!window.speechSynthesis) { if (onDone) setTimeout(onDone, 1500); return; }
     window.speechSynthesis.cancel();
-
-    var utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    // Try to pick a natural voice
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
     var voices = window.speechSynthesis.getVoices();
-    var preferred = voices.find(function (v) {
-      return v.lang.startsWith('en') && v.name.toLowerCase().includes('natural');
-    }) || voices.find(function (v) {
-      return v.lang.startsWith('en-US');
-    }) || voices.find(function (v) {
-      return v.lang.startsWith('en');
-    });
-
-    if (preferred) utterance.voice = preferred;
-
-    utterance.onend = function () {
-      if (onDone) onDone();
-    };
-    utterance.onerror = function () {
-      if (onDone) onDone();
-    };
-
-    window.speechSynthesis.speak(utterance);
+    var pref = voices.find(function (v) { return v.lang.startsWith('en') && v.name.toLowerCase().includes('natural'); })
+      || voices.find(function (v) { return v.lang.startsWith('en-US'); })
+      || voices.find(function (v) { return v.lang.startsWith('en'); });
+    if (pref) u.voice = pref;
+    u.onend = function () { if (onDone) onDone(); };
+    u.onerror = function () { if (onDone) onDone(); };
+    window.speechSynthesis.speak(u);
   }
 
-  // Pre-load voices (Chrome loads them async)
   if (window.speechSynthesis) {
     window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = function () {
-      window.speechSynthesis.getVoices();
-    };
+    window.speechSynthesis.onvoiceschanged = function () { window.speechSynthesis.getVoices(); };
   }
 
-  // ==================== VOICE CONVERSATION BUBBLES ====================
   function addVoiceBubble(speaker, text) {
     var bubble = document.createElement('div');
     bubble.className = 'voice-bubble voice-bubble--' + speaker;
-
     if (speaker === 'system') {
-      bubble.innerHTML = '<span class="voice-bubble__system">' + escapeHtml(text) + '</span>';
+      bubble.innerHTML = '<span class="voice-bubble__system">' + esc(text) + '</span>';
     } else {
       var labelText = speaker === 'prospect' ? prospect.prospectName : 'You';
-      bubble.innerHTML =
-        '<div class="voice-bubble__header">' +
-          '<span class="voice-bubble__name voice-bubble__name--' + speaker + '">' + escapeHtml(labelText) + '</span>' +
-        '</div>' +
-        '<div class="voice-bubble__text">' + escapeHtml(text) + '</div>';
+      bubble.innerHTML = '<div class="voice-bubble__header"><span class="voice-bubble__name voice-bubble__name--' + speaker + '">' + esc(labelText) + '</span></div><div class="voice-bubble__text">' + esc(text) + '</div>';
     }
-
     voiceConversation.appendChild(bubble);
     voiceConversation.scrollTop = voiceConversation.scrollHeight;
   }
 
-  // ==================== LIVE CALL MODE (uses server) ====================
+  // ==================== LIVE CALL MODE ====================
   var WS_BASE_URL = 'ws://localhost:3000';
-  var MSG = {
-    START_CALL: 'start-call',
-    STOP_CALL: 'stop-call',
-    GET_STATUS: 'get-status',
-    CALL_STATUS: 'call-status',
-    PAUSE_CALL: 'pause-call',
-    RESUME_CALL: 'resume-call',
-  };
-
-  var resultsWs = null;
-  var sessionId = null;
-  var isCallActive = false;
-
+  var MSG = { START_CALL: 'start-call', STOP_CALL: 'stop-call', GET_STATUS: 'get-status', CALL_STATUS: 'call-status', PAUSE_CALL: 'pause-call', RESUME_CALL: 'resume-call' };
+  var resultsWs = null, sessionId = null, isCallActive = false;
   var btnStart = document.getElementById('btn-start');
   var btnStop = document.getElementById('btn-stop');
   var btnPause = document.getElementById('btn-pause');
   var callTimer = document.getElementById('call-timer');
   var liveSetup = document.getElementById('live-setup');
   var transcriptLive = document.getElementById('transcript-live');
-  var transcriptSectionLive = document.getElementById('transcript-section-live');
-  var suggestionSectionLive = document.getElementById('suggestion-section-live');
-  var suggestionContainerLive = document.getElementById('suggestion-container-live');
+  var transcriptDetailsLive = document.getElementById('transcript-details-live');
+  var liveCopilotArea = document.getElementById('live-copilot-area');
+  var liveProspectText = document.getElementById('live-prospect-text');
+  var copilotLive = document.getElementById('copilot-live');
   var costBar = document.getElementById('cost-bar');
   var costAmount = document.getElementById('cost-amount');
   var costDetail = document.getElementById('cost-detail');
@@ -600,26 +486,21 @@
       return;
     }
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      var tab = tabs[0];
-      if (!tab) return;
-
-      btnStart.disabled = true;
-      btnStart.textContent = 'Starting...';
-
+      var tab = tabs[0]; if (!tab) return;
+      btnStart.disabled = true; btnStart.textContent = 'Starting...';
       chrome.runtime.sendMessage(
         { type: MSG.START_CALL, tabId: tab.id, leadType: leadSelect.value },
         function (response) {
           btnStart.disabled = false;
           if (chrome.runtime.lastError) {
-            alert('Error: ' + chrome.runtime.lastError.message + '\n\nMake sure you\'re on your dialer tab (not a chrome:// page) and click the extension icon first.');
-            resetStartBtn();
-            return;
+            alert('Error: ' + chrome.runtime.lastError.message + '\n\nMake sure you\'re on your dialer tab (not a chrome:// page).');
+            resetStartBtn(); return;
           }
           if (response && response.success) {
             sessionId = response.sessionId;
             onLiveCallStarted();
           } else {
-            alert('Failed to start call: ' + (response && response.error || 'Unknown error') + '\n\nMake sure:\n1. You\'re on your dialer website (not chrome:// pages)\n2. The server is running (cd server && npm run dev)');
+            alert('Failed: ' + (response && response.error || 'Unknown') + '\n\nMake sure:\n1. You\'re on your dialer website\n2. Server is running (cd server && npm run dev)');
             resetStartBtn();
           }
         }
@@ -638,23 +519,22 @@
     btnStop.classList.remove('hidden');
     btnPause.classList.remove('hidden');
     callTimer.classList.remove('hidden');
-    transcriptSectionLive.classList.remove('hidden');
-    suggestionSectionLive.classList.remove('hidden');
+    liveCopilotArea.classList.remove('hidden');
+    transcriptDetailsLive.classList.remove('hidden');
     costBar.classList.remove('hidden');
     startLiveTimer();
     connectLiveWs();
   }
 
   function stopLiveCall() {
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      chrome.runtime.sendMessage({ type: MSG.STOP_CALL });
-    }
+    if (typeof chrome !== 'undefined' && chrome.runtime) chrome.runtime.sendMessage({ type: MSG.STOP_CALL });
     isCallActive = false;
     liveSetup.classList.remove('hidden');
     btnStart.classList.remove('hidden');
     btnStop.classList.add('hidden');
     btnPause.classList.add('hidden');
     callTimer.classList.add('hidden');
+    liveCopilotArea.classList.add('hidden');
     stopLiveTimer();
     if (resultsWs) { resultsWs.close(); resultsWs = null; }
   }
@@ -663,42 +543,37 @@
     var url = WS_BASE_URL + '/ws/results?sessionId=' + sessionId;
     if (leadSelect.value) url += '&leadType=' + leadSelect.value;
     resultsWs = new WebSocket(url);
-    resultsWs.onmessage = function (event) {
-      try {
-        var msg = JSON.parse(event.data);
-        handleLiveMessage(msg);
-      } catch (e) { /* ignore */ }
-    };
-    resultsWs.onclose = function () {
-      if (isCallActive) setTimeout(connectLiveWs, 2000);
-    };
+    resultsWs.onmessage = function (event) { try { handleLiveMessage(JSON.parse(event.data)); } catch (e) {} };
+    resultsWs.onclose = function () { if (isCallActive) setTimeout(connectLiveWs, 2000); };
   }
 
   function handleLiveMessage(msg) {
+    // Transcript
     if (msg.type === 'transcript_final') {
       var entry = document.createElement('div');
       entry.className = 'transcript-entry transcript-entry--' + msg.speaker;
-      entry.innerHTML =
-        '<span class="speaker-label speaker-label--' + msg.speaker + '">' +
-        (msg.speaker === 'prospect' ? 'Prospect' : 'You') + '</span>' +
-        '<span class="transcript-text">' + escapeHtml(msg.text) + '</span>';
+      entry.innerHTML = '<span class="speaker-label speaker-label--' + msg.speaker + '">' + (msg.speaker === 'prospect' ? 'Prospect' : 'You') + '</span><span class="transcript-text">' + esc(msg.text) + '</span>';
       transcriptLive.appendChild(entry);
       transcriptLive.scrollTop = transcriptLive.scrollHeight;
+
+      // Run diagnosis on prospect speech
+      if (msg.speaker === 'prospect' && msg.text.length > 10) {
+        liveProspectText.textContent = '"' + msg.text + '"';
+        var result = DiagnosisEngine.diagnose(msg.text);
+        if (result) renderCopilotOutput(copilotLive, result);
+      }
     }
+    // Suggestion from server (AI-adapted)
     if (msg.type === 'suggestion_start') {
-      var colors = CATEGORY_COLORS[msg.objectionType] || { bg: 'rgba(168,85,247,0.15)', text: '#c084fc' };
-      suggestionContainerLive.innerHTML =
-        '<div class="suggestion-card">' +
-          '<div class="suggestion-card__header">' +
-            '<span class="objection-badge" style="background:' + colors.bg + ';color:' + colors.text + '">' + escapeHtml(msg.objectionLabel) + '</span>' +
-          '</div>' +
-          '<div class="suggestion-card__say-label">SAY THIS:</div>' +
-          '<div class="suggestion-card__script">' + escapeHtml(msg.baseScript) + '</div>' +
-        '</div>';
+      // Server suggestions enhance the local diagnosis
+      var serverCard = document.createElement('div');
+      serverCard.className = 'copilot__ai-enhanced';
+      serverCard.innerHTML = '<div class="copilot__ai-label">AI-Adapted Response</div><div class="copilot__option-script">' + esc(msg.baseScript) + '</div>';
+      copilotLive.appendChild(serverCard);
     }
     if (msg.type === 'suggestion_complete') {
-      var card = suggestionContainerLive.querySelector('.suggestion-card__script');
-      if (card) card.textContent = msg.fullScript;
+      var aiCard = copilotLive.querySelector('.copilot__ai-enhanced .copilot__option-script');
+      if (aiCard) aiCard.textContent = msg.fullScript;
     }
     if (msg.type === 'cost_update') {
       costAmount.textContent = '$' + ((msg.estimatedCostCents || 0) / 100).toFixed(2);
@@ -714,23 +589,18 @@
       callTimer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
     }, 1000);
   }
-  function stopLiveTimer() {
-    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  }
+  function stopLiveTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
 
-  // Listen for call status from service worker
   if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener(function (message) {
-      if (message.type === MSG.CALL_STATUS && !message.isCapturing && isCallActive) {
-        stopLiveCall();
-      }
+      if (message.type === MSG.CALL_STATUS && !message.isCapturing && isCallActive) stopLiveCall();
     });
   }
 
   // ==================== UTILS ====================
-  function escapeHtml(text) {
+  function esc(text) {
     var div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = text || '';
     return div.innerHTML;
   }
 
