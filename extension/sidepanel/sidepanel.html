@@ -22,6 +22,7 @@
       <button class="mode-tab mode-tab--active" data-mode="practice" id="tab-practice">Practice</button>
       <button class="mode-tab" data-mode="live" id="tab-live">Live Call</button>
       <button class="mode-tab" data-mode="scripts" id="tab-scripts">Scripts</button>
+      <button class="mode-tab mode-tab--setup" data-mode="setup" id="tab-setup">Setup</button>
     </div>
 
     <!-- Lead Type Selector -->
@@ -267,12 +268,108 @@
     <div class="mode-content hidden" id="mode-scripts">
       <div class="script-library" id="script-library"></div>
     </div>
+
+    <!-- ==================== SETUP ==================== -->
+    <div class="mode-content hidden" id="mode-setup">
+
+      <!-- Agent Profile -->
+      <div class="setup-section">
+        <div class="setup-section__header">
+          <h3>Your Profile</h3>
+          <p class="setup-section__desc">Personalizes all scripts with your name, team, and market area.</p>
+        </div>
+
+        <div class="setup-field">
+          <label class="setup-field__label" for="agent-name">Your Name</label>
+          <input type="text" class="setup-field__input" id="agent-name" placeholder="e.g. Sarah Johnson" autocomplete="off">
+        </div>
+
+        <div class="setup-field">
+          <label class="setup-field__label" for="agent-team">Team / Brokerage</label>
+          <input type="text" class="setup-field__input" id="agent-team" placeholder="e.g. Johnson Real Estate Group" autocomplete="off">
+        </div>
+
+        <div class="setup-field">
+          <label class="setup-field__label" for="agent-area">Market Area</label>
+          <input type="text" class="setup-field__input" id="agent-area" placeholder="e.g. San Diego County" value="San Diego County" autocomplete="off">
+        </div>
+
+        <div class="setup-field">
+          <label class="setup-field__label" for="agent-calendar">Calendar Link (for booking appointments)</label>
+          <input type="text" class="setup-field__input" id="agent-calendar" placeholder="e.g. calendly.com/yourname" autocomplete="off">
+        </div>
+
+        <div class="setup-field">
+          <label class="setup-field__label" for="agent-value-prop">What makes you different? (your value prop)</label>
+          <textarea class="setup-field__textarea" id="agent-value-prop" rows="3" placeholder="e.g. Our team invests $30k/month in marketing, we have a dedicated listing specialist, 200+ homes sold in San Diego..."></textarea>
+        </div>
+
+        <button class="btn btn--setup-save" id="save-profile-btn">Save Profile</button>
+        <div class="setup-status" id="profile-status"></div>
+      </div>
+
+      <!-- Upload Scripts -->
+      <div class="setup-section">
+        <div class="setup-section__header">
+          <h3>Your Scripts</h3>
+          <p class="setup-section__desc">Paste your call scripts, objection handlers, or playbook content. AI automatically extracts and organizes everything.</p>
+        </div>
+
+        <div class="setup-format-hints">
+          <div class="setup-format-hint">Works with any format — numbered lists, headers with scripts, bullet points, Q&A, etc.</div>
+        </div>
+
+        <textarea class="setup-field__textarea setup-field__textarea--tall" id="custom-scripts-input" rows="8" placeholder="Paste your scripts here...
+
+Example formats that work:
+
+OBJECTION: &quot;We're not interested&quot;
+RESPONSE: &quot;I totally understand...&quot;
+
+1. Not Interested
+I get it — most homeowners feel the same way...
+
+- Has Agent: That's great you have someone..."></textarea>
+
+        <div class="setup-upload-row">
+          <label class="setup-upload-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1v8M3 5l4-4 4 4M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Upload .txt file
+            <input type="file" id="script-file-input" accept=".txt,.text,.csv,.md" hidden>
+          </label>
+          <button class="btn btn--extract" id="extract-scripts-btn">Extract Scripts</button>
+        </div>
+        <div class="setup-status" id="extract-status"></div>
+      </div>
+
+      <!-- Extracted Preview -->
+      <div class="setup-section hidden" id="extracted-preview">
+        <div class="setup-section__header">
+          <h3>Extracted Scripts <span class="setup-count" id="extracted-count">0</span></h3>
+          <p class="setup-section__desc">Review what was found. Delete any you don't want.</p>
+        </div>
+        <div id="extracted-list"></div>
+        <button class="btn btn--setup-save" id="save-extracted-btn">Save & Use These Scripts</button>
+        <div class="setup-status" id="save-extracted-status"></div>
+      </div>
+
+      <!-- Saved Custom Scripts -->
+      <div class="setup-section" id="saved-scripts-section">
+        <div class="setup-section__header">
+          <h3>Saved Custom Scripts <span class="setup-count" id="saved-count">0</span></h3>
+        </div>
+        <div id="saved-scripts-list"></div>
+        <button class="btn btn--setup-clear hidden" id="clear-scripts-btn">Clear All Custom Scripts</button>
+      </div>
+
+    </div><!-- /mode-setup -->
   </div>
 
   <script src="data/scripts-data.js"></script>
   <script src="engine/objection-engine.js"></script>
   <script src="engine/diagnosis-engine.js"></script>
   <script src="engine/prospect-ai.js"></script>
+  <script src="engine/script-extractor.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>

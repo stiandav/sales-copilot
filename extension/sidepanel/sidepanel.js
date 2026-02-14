@@ -10,6 +10,7 @@
   var modePractice = document.getElementById('mode-practice');
   var modeLive = document.getElementById('mode-live');
   var modeScripts = document.getElementById('mode-scripts');
+  var modeSetup = document.getElementById('mode-setup');
   var leadSelect = document.getElementById('lead-type');
   var scenarioGrid = document.getElementById('scenario-grid');
   var practiceField = document.getElementById('practice-field');
@@ -28,7 +29,12 @@
     practice: modePractice,
     live: modeLive,
     scripts: modeScripts,
+    setup: modeSetup,
   };
+
+  // ---- Agent Profile + Custom Scripts state ----
+  var agentProfile = { name: '', team: '', area: 'San Diego County', calendarLink: '', valueProp: '' };
+  var customScripts = []; // Array of {label, category, objection, script, source}
 
   // ==================== MODE SWITCHING ====================
   modeTabs.forEach(function (tab) {
@@ -40,6 +46,7 @@
         entry[1].classList.toggle('hidden', entry[0] !== mode);
       });
       if (mode === 'scripts') renderScriptLibrary();
+      if (mode === 'setup') renderSavedScripts();
     });
   });
 
@@ -590,11 +597,27 @@
     setTimeout(function () { keyStatus.textContent = ''; }, 2000);
   });
 
-  // ---- Build quick-tap grid (lead-type-specific) ----
+  // ---- Build quick-tap grid (lead-type-specific + custom scripts) ----
   function buildQuickTapGrid() {
     if (!quickTapGrid) return;
     quickTapGrid.innerHTML = '';
     var leadType = leadSelect ? leadSelect.value : '';
+
+    // Add custom scripts first (highlighted)
+    if (customScripts && customScripts.length > 0) {
+      customScripts.forEach(function (cs) {
+        var btn = document.createElement('button');
+        btn.className = 'quick-tap-btn quick-tap-btn--custom';
+        btn.textContent = cs.label;
+        btn.title = cs.script;
+        btn.addEventListener('click', function () {
+          handleCustomQuickTap(cs);
+        });
+        quickTapGrid.appendChild(btn);
+      });
+    }
+
+    // Add built-in taps for the selected lead type
     var taps = [];
     if (typeof QUICK_TAPS !== 'undefined') {
       taps = QUICK_TAPS[leadType] || QUICK_TAPS[''] || [];
@@ -620,13 +643,31 @@
     }
   }
 
+  function handleCustomQuickTap(cs) {
+    // For custom scripts, show directly in SAY THIS with the user's own script
+    var customResult = {
+      signal: { label: ScriptExtractor.CATEGORY_LABELS[cs.category] || cs.category },
+      options: [{ label: cs.label, script: personalizeScript(cs.script) }],
+    };
+    // Also try built-in diagnosis for additional options
+    var builtIn = DiagnosisEngine.diagnose(cs.objection || cs.label);
+    if (builtIn && builtIn.options) {
+      for (var i = 0; i < builtIn.options.length; i++) {
+        customResult.options.push(builtIn.options[i]);
+      }
+    }
+    showSayThis(customResult);
+    openingCard.classList.add('hidden');
+    closeCard.classList.add('hidden');
+  }
+
   // ---- Opening script ----
   function showOpeningScript() {
     var leadType = leadSelect.value || '';
     var opening = DiagnosisEngine.getOpeningScript(leadType);
     if (!opening) return;
-    openingScriptEl.textContent = opening.script;
-    openingFollowUp.textContent = opening.followUp || '';
+    openingScriptEl.textContent = personalizeScript(opening.script);
+    openingFollowUp.textContent = personalizeScript(opening.followUp || '');
     openingFollowUp.classList.add('hidden');
     openingFollowUpBtn.classList.remove('hidden');
     openingCard.classList.remove('hidden');
@@ -957,6 +998,254 @@
     });
   }
 
+  // ==================== SETUP TAB ====================
+  var agentNameInput = document.getElementById('agent-name');
+  var agentTeamInput = document.getElementById('agent-team');
+  var agentAreaInput = document.getElementById('agent-area');
+  var agentCalendarInput = document.getElementById('agent-calendar');
+  var agentValuePropInput = document.getElementById('agent-value-prop');
+  var saveProfileBtn = document.getElementById('save-profile-btn');
+  var profileStatus = document.getElementById('profile-status');
+
+  var customScriptsInput = document.getElementById('custom-scripts-input');
+  var scriptFileInput = document.getElementById('script-file-input');
+  var extractScriptsBtn = document.getElementById('extract-scripts-btn');
+  var extractStatus = document.getElementById('extract-status');
+  var extractedPreview = document.getElementById('extracted-preview');
+  var extractedList = document.getElementById('extracted-list');
+  var extractedCountEl = document.getElementById('extracted-count');
+  var saveExtractedBtn = document.getElementById('save-extracted-btn');
+  var saveExtractedStatus = document.getElementById('save-extracted-status');
+  var savedScriptsList = document.getElementById('saved-scripts-list');
+  var savedCountEl = document.getElementById('saved-count');
+  var clearScriptsBtn = document.getElementById('clear-scripts-btn');
+
+  var pendingExtracted = []; // Scripts waiting to be saved
+
+  // ---- Load saved profile + custom scripts from storage ----
+  function loadSavedData() {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.get(['agentProfile', 'customScripts'], function (data) {
+        if (data.agentProfile) {
+          agentProfile = data.agentProfile;
+          if (agentNameInput) agentNameInput.value = agentProfile.name || '';
+          if (agentTeamInput) agentTeamInput.value = agentProfile.team || '';
+          if (agentAreaInput) agentAreaInput.value = agentProfile.area || 'San Diego County';
+          if (agentCalendarInput) agentCalendarInput.value = agentProfile.calendarLink || '';
+          if (agentValuePropInput) agentValuePropInput.value = agentProfile.valueProp || '';
+        }
+        if (data.customScripts && data.customScripts.length > 0) {
+          customScripts = data.customScripts;
+          buildQuickTapGrid(); // Rebuild with custom scripts included
+        }
+        renderSavedScripts();
+      });
+    }
+  }
+
+  // ---- Save profile ----
+  if (saveProfileBtn) saveProfileBtn.addEventListener('click', function () {
+    agentProfile.name = (agentNameInput.value || '').trim();
+    agentProfile.team = (agentTeamInput.value || '').trim();
+    agentProfile.area = (agentAreaInput.value || '').trim() || 'San Diego County';
+    agentProfile.calendarLink = (agentCalendarInput.value || '').trim();
+    agentProfile.valueProp = (agentValuePropInput.value || '').trim();
+
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.set({ agentProfile: agentProfile });
+    }
+    profileStatus.textContent = 'Profile saved! Scripts are now personalized.';
+    profileStatus.style.color = 'var(--accent-green)';
+    setTimeout(function () { profileStatus.textContent = ''; }, 3000);
+  });
+
+  // ---- File upload handler ----
+  if (scriptFileInput) scriptFileInput.addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      customScriptsInput.value = ev.target.result;
+      extractStatus.textContent = 'File loaded: ' + file.name;
+      extractStatus.style.color = 'var(--accent-blue)';
+    };
+    reader.readAsText(file);
+  });
+
+  // ---- Extract scripts ----
+  if (extractScriptsBtn) extractScriptsBtn.addEventListener('click', function () {
+    var rawText = (customScriptsInput.value || '').trim();
+    if (!rawText || rawText.length < 20) {
+      extractStatus.textContent = 'Paste or upload your scripts first.';
+      extractStatus.style.color = 'var(--accent-red)';
+      return;
+    }
+
+    extractStatus.textContent = 'Extracting...';
+    extractStatus.style.color = 'var(--accent-blue)';
+
+    // Run extraction
+    var results = ScriptExtractor.extract(rawText);
+
+    // Also try to extract profile info
+    var profileHints = ScriptExtractor.extractProfile(rawText);
+    if (profileHints.name && !agentNameInput.value) agentNameInput.value = profileHints.name;
+    if (profileHints.team && !agentTeamInput.value) agentTeamInput.value = profileHints.team;
+    if (profileHints.area && !agentAreaInput.value) agentAreaInput.value = profileHints.area;
+
+    if (results.length === 0) {
+      extractStatus.textContent = 'No scripts detected. Try a different format (see examples in the text area).';
+      extractStatus.style.color = 'var(--accent-yellow)';
+      extractedPreview.classList.add('hidden');
+      return;
+    }
+
+    extractStatus.textContent = 'Found ' + results.length + ' scripts!';
+    extractStatus.style.color = 'var(--accent-green)';
+
+    pendingExtracted = results;
+    renderExtractedPreview();
+  });
+
+  // ---- Render extracted preview ----
+  function renderExtractedPreview() {
+    extractedPreview.classList.remove('hidden');
+    extractedCountEl.textContent = pendingExtracted.length;
+    extractedList.innerHTML = '';
+
+    pendingExtracted.forEach(function (script, idx) {
+      var card = document.createElement('div');
+      card.className = 'extracted-card';
+      card.innerHTML =
+        '<div class="extracted-card__body">' +
+          '<div class="extracted-card__header">' +
+            '<span class="extracted-card__label">' + esc(script.label) + '</span>' +
+            '<span class="extracted-card__category">' + esc(ScriptExtractor.CATEGORY_LABELS[script.category] || script.category) + '</span>' +
+          '</div>' +
+          '<div class="extracted-card__objection">' + esc(script.objection) + '</div>' +
+          '<div class="extracted-card__script">' + esc(script.script) + '</div>' +
+        '</div>' +
+        '<button class="extracted-card__delete" title="Remove">&times;</button>';
+
+      var deleteBtn = card.querySelector('.extracted-card__delete');
+      (function (index) {
+        deleteBtn.addEventListener('click', function () {
+          pendingExtracted.splice(index, 1);
+          renderExtractedPreview();
+        });
+      })(idx);
+
+      extractedList.appendChild(card);
+    });
+  }
+
+  // ---- Save extracted scripts ----
+  if (saveExtractedBtn) saveExtractedBtn.addEventListener('click', function () {
+    if (pendingExtracted.length === 0) {
+      saveExtractedStatus.textContent = 'No scripts to save.';
+      saveExtractedStatus.style.color = 'var(--accent-red)';
+      return;
+    }
+
+    // Merge with existing custom scripts (avoid exact duplicates)
+    var existingKeys = {};
+    customScripts.forEach(function (s) { existingKeys[s.script.substring(0, 50).toLowerCase()] = true; });
+
+    var added = 0;
+    pendingExtracted.forEach(function (s) {
+      var key = s.script.substring(0, 50).toLowerCase();
+      if (!existingKeys[key]) {
+        customScripts.push(s);
+        existingKeys[key] = true;
+        added++;
+      }
+    });
+
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.set({ customScripts: customScripts });
+    }
+
+    saveExtractedStatus.textContent = 'Saved ' + added + ' new scripts! They now appear in your quick-tap grid.';
+    saveExtractedStatus.style.color = 'var(--accent-green)';
+    setTimeout(function () { saveExtractedStatus.textContent = ''; }, 4000);
+
+    pendingExtracted = [];
+    extractedPreview.classList.add('hidden');
+    customScriptsInput.value = '';
+    buildQuickTapGrid(); // Rebuild grid with new scripts
+    renderSavedScripts();
+  });
+
+  // ---- Render saved custom scripts ----
+  function renderSavedScripts() {
+    if (!savedScriptsList) return;
+    savedScriptsList.innerHTML = '';
+    savedCountEl.textContent = customScripts.length;
+    if (clearScriptsBtn) clearScriptsBtn.classList.toggle('hidden', customScripts.length === 0);
+
+    if (customScripts.length === 0) {
+      savedScriptsList.innerHTML = '<div style="font-size: 12px; color: var(--text-dim); padding: 8px 0;">No custom scripts yet. Upload or paste your scripts above.</div>';
+      return;
+    }
+
+    customScripts.forEach(function (script, idx) {
+      var card = document.createElement('div');
+      card.className = 'extracted-card';
+      card.innerHTML =
+        '<div class="extracted-card__body">' +
+          '<div class="extracted-card__header">' +
+            '<span class="extracted-card__label">' + esc(script.label) + '</span>' +
+            '<span class="extracted-card__category">' + esc(ScriptExtractor.CATEGORY_LABELS[script.category] || script.category) + '</span>' +
+          '</div>' +
+          '<div class="extracted-card__script">' + esc(script.script) + '</div>' +
+        '</div>' +
+        '<button class="extracted-card__delete" title="Remove">&times;</button>';
+
+      var deleteBtn = card.querySelector('.extracted-card__delete');
+      (function (index) {
+        deleteBtn.addEventListener('click', function () {
+          customScripts.splice(index, 1);
+          if (typeof chrome !== 'undefined' && chrome.storage) {
+            chrome.storage.local.set({ customScripts: customScripts });
+          }
+          buildQuickTapGrid();
+          renderSavedScripts();
+        });
+      })(idx);
+
+      savedScriptsList.appendChild(card);
+    });
+  }
+
+  // ---- Clear all custom scripts ----
+  if (clearScriptsBtn) clearScriptsBtn.addEventListener('click', function () {
+    customScripts = [];
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.set({ customScripts: [] });
+    }
+    buildQuickTapGrid();
+    renderSavedScripts();
+  });
+
+  // ---- Personalize script text with agent profile ----
+  function personalizeScript(text) {
+    if (!text) return text;
+    var result = text;
+    if (agentProfile.name) {
+      result = result.replace(/my name is ___/gi, 'my name is ' + agentProfile.name);
+      result = result.replace(/I'm ___/g, "I'm " + agentProfile.name);
+    }
+    if (agentProfile.team) {
+      result = result.replace(/a real estate team/gi, agentProfile.team);
+      result = result.replace(/our team/gi, agentProfile.team);
+    }
+    if (agentProfile.area && agentProfile.area !== 'San Diego County') {
+      result = result.replace(/San Diego County/g, agentProfile.area);
+      result = result.replace(/San Diego/g, agentProfile.area.replace(/ County$/, ''));
+    }
+    return result;
+  }
+
   // ==================== UTILS ====================
   function esc(text) {
     var div = document.createElement('div');
@@ -968,5 +1257,6 @@
   renderScenarios();
   buildQuickTapGrid();
   updateListenModeUI();
+  loadSavedData();
   practiceField.focus();
 })();
