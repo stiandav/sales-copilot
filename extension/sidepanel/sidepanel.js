@@ -1,370 +1,350 @@
-const WS_BASE_URL = 'ws://localhost:3000';
-
-const MSG = {
-  START_CALL: 'start-call',
-  STOP_CALL: 'stop-call',
-  GET_STATUS: 'get-status',
-  CALL_STATUS: 'call-status',
-  PAUSE_CALL: 'pause-call',
-  RESUME_CALL: 'resume-call',
-};
+// ========== COLD CALL AI — Main Controller ==========
+// Practice mode runs 100% locally in the browser. No server, no API keys, no setup.
 
 (function () {
+  const engine = new ObjectionEngine();
+
+  // DOM refs
+  const modeTabs = document.querySelectorAll('.mode-tab');
+  const modePractice = document.getElementById('mode-practice');
+  const modeLive = document.getElementById('mode-live');
+  const modeScripts = document.getElementById('mode-scripts');
+  const leadSelect = document.getElementById('lead-type');
+  const scenarioGrid = document.getElementById('scenario-grid');
+  const practiceField = document.getElementById('practice-field');
+  const practiceSend = document.getElementById('practice-send');
+  const transcriptEl = document.getElementById('transcript-practice');
+  const suggestionContainer = document.getElementById('suggestion-container-practice');
+  const emptyHint = document.getElementById('empty-hint-practice');
+  const scriptLibrary = document.getElementById('script-library');
+
+  const modes = {
+    practice: modePractice,
+    live: modeLive,
+    scripts: modeScripts,
+  };
+
+  // ==================== MODE SWITCHING ====================
+  modeTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const mode = tab.dataset.mode;
+      modeTabs.forEach((t) => t.classList.remove('mode-tab--active'));
+      tab.classList.add('mode-tab--active');
+
+      Object.entries(modes).forEach(([key, el]) => {
+        el.classList.toggle('hidden', key !== mode);
+      });
+
+      if (mode === 'scripts') renderScriptLibrary();
+    });
+  });
+
+  // ==================== LEAD TYPE CHANGE ====================
+  leadSelect.addEventListener('change', () => {
+    renderScenarios();
+    renderScriptLibrary();
+  });
+
+  // ==================== SCENARIOS ====================
+  function renderScenarios() {
+    const leadType = leadSelect.value;
+    const scenarios = engine.getScenariosForLeadType(leadType);
+    scenarioGrid.innerHTML = '';
+
+    scenarios.forEach((s) => {
+      const btn = document.createElement('button');
+      btn.className = 'scenario-btn';
+      btn.textContent = s.label;
+      btn.title = s.text;
+      btn.addEventListener('click', () => handleProspectText(s.text));
+      scenarioGrid.appendChild(btn);
+    });
+  }
+
+  // ==================== PRACTICE INPUT ====================
+  practiceField.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && practiceField.value.trim()) {
+      handleProspectText(practiceField.value.trim());
+      practiceField.value = '';
+    }
+  });
+
+  practiceSend.addEventListener('click', () => {
+    if (practiceField.value.trim()) {
+      handleProspectText(practiceField.value.trim());
+      practiceField.value = '';
+    }
+  });
+
+  // ==================== CORE: PROCESS PROSPECT TEXT ====================
+  function handleProspectText(text) {
+    emptyHint.classList.add('hidden');
+
+    // Show in transcript
+    addTranscriptEntry('prospect', text);
+
+    // Detect objection locally
+    const match = engine.detect(text);
+
+    if (match) {
+      showSuggestion(match);
+    } else {
+      showNoMatch(text);
+    }
+
+    // Scroll to suggestion
+    suggestionContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function addTranscriptEntry(speaker, text) {
+    const entry = document.createElement('div');
+    entry.className = 'transcript-entry transcript-entry--' + speaker;
+
+    const label = document.createElement('span');
+    label.className = 'speaker-label speaker-label--' + speaker;
+    label.textContent = speaker === 'prospect' ? 'Prospect' : 'You';
+
+    const textEl = document.createElement('span');
+    textEl.className = 'transcript-text';
+    textEl.textContent = text;
+
+    entry.appendChild(label);
+    entry.appendChild(textEl);
+    transcriptEl.appendChild(entry);
+  }
+
+  function showSuggestion(match) {
+    const script = match.script;
+    const colors = CATEGORY_COLORS[script.category] || { bg: 'rgba(168,85,247,0.15)', text: '#c084fc' };
+
+    suggestionContainer.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.className = 'suggestion-card';
+
+    card.innerHTML =
+      '<div class="suggestion-card__header">' +
+        '<span class="objection-badge" style="background:' + colors.bg + ';color:' + colors.text + '">' +
+          escapeHtml(script.label) +
+        '</span>' +
+      '</div>' +
+      '<div class="suggestion-card__say-label">SAY THIS:</div>' +
+      '<div class="suggestion-card__script">' + escapeHtml(script.script) + '</div>' +
+      '<div class="suggestion-card__trigger">Triggered by: "' + escapeHtml(match.triggerText) + '"</div>';
+
+    suggestionContainer.appendChild(card);
+  }
+
+  function showNoMatch(text) {
+    suggestionContainer.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.className = 'suggestion-card';
+    card.style.borderColor = 'var(--border)';
+    card.style.boxShadow = 'none';
+
+    card.innerHTML =
+      '<div class="suggestion-card__header">' +
+        '<span class="objection-badge" style="background:rgba(95,99,104,0.15);color:var(--text-dim)">No Match</span>' +
+      '</div>' +
+      '<div class="suggestion-card__script" style="color:var(--text-secondary);font-size:14px">' +
+        'No specific objection detected. Try responding with curiosity: ' +
+        '"That\'s interesting \u2014 can you tell me more about that?"' +
+      '</div>' +
+      '<div class="suggestion-card__trigger">Input: "' + escapeHtml(text) + '"</div>';
+
+    suggestionContainer.appendChild(card);
+  }
+
+  // ==================== SCRIPT LIBRARY ====================
+  function renderScriptLibrary() {
+    const leadType = leadSelect.value;
+    const scripts = engine.getScriptsForLeadType(leadType);
+    scriptLibrary.innerHTML = '';
+
+    scripts.forEach((s) => {
+      const card = document.createElement('div');
+      card.className = 'script-card';
+
+      const leadTags = (s.leadTypes || [])
+        .map((lt) => '<span class="script-card__lead-tag">' + (LEAD_TYPE_LABELS[lt] || lt) + '</span>')
+        .join(' ');
+
+      const topPatterns = s.patterns.slice(0, 5).map((p) => '"' + p + '"').join(', ');
+
+      card.innerHTML =
+        '<div class="script-card__header">' +
+          '<span class="script-card__label">' + escapeHtml(s.label) + '</span>' +
+          leadTags +
+        '</div>' +
+        '<div class="script-card__patterns">Triggers: ' + escapeHtml(topPatterns) + '</div>' +
+        '<div class="script-card__body">' + escapeHtml(s.script) + '</div>';
+
+      scriptLibrary.appendChild(card);
+    });
+  }
+
+  // ==================== LIVE CALL MODE (uses server) ====================
+  const WS_BASE_URL = 'ws://localhost:3000';
+  const MSG = {
+    START_CALL: 'start-call',
+    STOP_CALL: 'stop-call',
+    GET_STATUS: 'get-status',
+    CALL_STATUS: 'call-status',
+    PAUSE_CALL: 'pause-call',
+    RESUME_CALL: 'resume-call',
+  };
+
   let resultsWs = null;
   let sessionId = null;
   let isCallActive = false;
-  let isPracticeMode = false;
-  let isPaused = false;
-  let reconnectTimer = null;
-  let activeSuggestion = null;
-  const suggestions = [];
 
-  // DOM elements
-  const transcriptView = new TranscriptView(
-    document.getElementById('transcript')
-  );
-  const callControls = new CallControls({
-    btnStart: document.getElementById('btn-start'),
-    btnStop: document.getElementById('btn-stop'),
-    btnPause: document.getElementById('btn-pause'),
-    timer: document.getElementById('call-timer'),
-    onStart: startCall,
-    onStop: stopCall,
-    onPause: togglePause,
-  });
-
-  const suggestionContainer = document.getElementById('suggestion-container');
-  const previousSuggestions = document.getElementById('previous-suggestions');
-  const emptyState = document.getElementById('empty-state');
-  const transcriptSection = document.getElementById('transcript-section');
-  const suggestionSection = document.getElementById('suggestion-section');
-  const connectionStatus = document.getElementById('connection-status');
-  const practiceToggle = document.getElementById('practice-toggle');
-  const leadTypeSelect = document.getElementById('lead-type');
-  const practiceInput = document.getElementById('practice-input');
-  const practiceField = document.getElementById('practice-field');
-  const practiceSend = document.getElementById('practice-send');
+  const btnStart = document.getElementById('btn-start');
+  const btnStop = document.getElementById('btn-stop');
+  const btnPause = document.getElementById('btn-pause');
+  const callTimer = document.getElementById('call-timer');
+  const liveSetup = document.getElementById('live-setup');
+  const transcriptLive = document.getElementById('transcript-live');
+  const transcriptSectionLive = document.getElementById('transcript-section-live');
+  const suggestionSectionLive = document.getElementById('suggestion-section-live');
+  const suggestionContainerLive = document.getElementById('suggestion-container-live');
   const costBar = document.getElementById('cost-bar');
   const costAmount = document.getElementById('cost-amount');
   const costDetail = document.getElementById('cost-detail');
+  let timerInterval = null;
 
-  // Practice mode toggle
-  practiceToggle.addEventListener('change', () => {
-    isPracticeMode = practiceToggle.checked;
-    if (isPracticeMode) {
-      callControls.setStartLabel('Start Practice');
-    } else {
-      callControls.setStartLabel('Start Call');
-    }
-  });
+  btnStart.addEventListener('click', startLiveCall);
+  btnStop.addEventListener('click', stopLiveCall);
 
-  // Practice input handlers
-  practiceField.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && practiceField.value.trim()) {
-      sendPracticeInput();
-    }
-  });
-  practiceSend.addEventListener('click', () => {
-    if (practiceField.value.trim()) {
-      sendPracticeInput();
-    }
-  });
-
-  function sendPracticeInput() {
-    const text = practiceField.value.trim();
-    if (!text || !resultsWs) return;
-
-    resultsWs.send(JSON.stringify({ type: 'practice_input', text }));
-    practiceField.value = '';
-    practiceField.focus();
-  }
-
-  // Check current status on load
-  chrome.runtime.sendMessage({ type: MSG.GET_STATUS }, (response) => {
-    if (chrome.runtime.lastError) return;
-    if (response && response.isCapturing) {
-      sessionId = response.sessionId;
-      onCallStarted();
-    }
-  });
-
-  // Listen for status updates from service worker
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === MSG.CALL_STATUS) {
-      if (message.isCapturing && !isCallActive) {
-        sessionId = message.sessionId;
-        onCallStarted();
-      } else if (!message.isCapturing && isCallActive) {
-        onCallStopped();
-      }
-    }
-  });
-
-  async function startCall() {
-    if (isPracticeMode) {
-      // Practice mode: just connect WebSocket, no tab capture
-      sessionId = 'practice-' + Date.now();
-      onCallStarted();
-      return;
-    }
-
+  async function startLiveCall() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab) return;
 
-    callControls.setLoading(true);
+    btnStart.disabled = true;
+    btnStart.textContent = 'Starting...';
 
-    const leadType = leadTypeSelect.value;
     chrome.runtime.sendMessage(
-      { type: MSG.START_CALL, tabId: tab.id, leadType },
+      { type: MSG.START_CALL, tabId: tab.id, leadType: leadSelect.value },
       (response) => {
-        callControls.setLoading(false);
-
+        btnStart.disabled = false;
         if (chrome.runtime.lastError) {
-          console.error('Message error:', chrome.runtime.lastError.message);
+          alert('Error: ' + chrome.runtime.lastError.message + '\n\nMake sure you\'re on your dialer tab (not a chrome:// page) and click the extension icon first.');
+          btnStart.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.6 10.3l-2.8-1.2a.7.7 0 00-.7.1l-1.3 1.1a.4.4 0 01-.4 0A10 10 0 015.7 7.6a.4.4 0 010-.4L6.8 5.9a.7.7 0 00.1-.7L5.7 2.4a.7.7 0 00-.8-.4l-2.4.6A.7.7 0 002 3.3 12.1 12.1 0 0012.7 14a.7.7 0 00.7-.5l.6-2.4a.7.7 0 00-.4-.8z"/></svg> Start Call';
           return;
         }
-
         if (response && response.success) {
           sessionId = response.sessionId;
-          onCallStarted();
+          onLiveCallStarted();
         } else {
-          console.error('Failed to start call:', response && response.error);
+          alert('Failed to start call: ' + (response && response.error || 'Unknown error') + '\n\nMake sure:\n1. You\'re on your dialer website (not chrome:// pages)\n2. The server is running (cd server && npm run dev)');
+          btnStart.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.6 10.3l-2.8-1.2a.7.7 0 00-.7.1l-1.3 1.1a.4.4 0 01-.4 0A10 10 0 015.7 7.6a.4.4 0 010-.4L6.8 5.9a.7.7 0 00.1-.7L5.7 2.4a.7.7 0 00-.8-.4l-2.4.6A.7.7 0 002 3.3 12.1 12.1 0 0012.7 14a.7.7 0 00.7-.5l.6-2.4a.7.7 0 00-.4-.8z"/></svg> Start Call';
         }
       }
     );
   }
 
-  function stopCall() {
-    if (isPracticeMode) {
-      onCallStopped();
-      return;
-    }
-
-    chrome.runtime.sendMessage({ type: MSG.STOP_CALL }, () => {
-      onCallStopped();
-    });
-  }
-
-  function togglePause() {
-    isPaused = !isPaused;
-    callControls.setPaused(isPaused);
-
-    if (isPracticeMode) return;
-
-    // Send pause state to server via results WebSocket
-    if (resultsWs && resultsWs.readyState === WebSocket.OPEN) {
-      resultsWs.send(JSON.stringify({ type: 'set_paused', paused: isPaused }));
-    }
-
-    // Also tell service worker to pause audio sending
-    chrome.runtime.sendMessage({
-      type: isPaused ? MSG.PAUSE_CALL : MSG.RESUME_CALL,
-    }).catch(() => {});
-
-    updateConnectionStatus(isPaused ? 'paused' : 'recording');
-  }
-
-  function onCallStarted() {
+  function onLiveCallStarted() {
     isCallActive = true;
-    isPaused = false;
-    callControls.setActive(true, isPracticeMode);
-
-    // Clear previous call state
-    transcriptView.clear();
-    suggestionContainer.innerHTML = '';
-    previousSuggestions.innerHTML = '';
-    activeSuggestion = null;
-    suggestions.length = 0;
-
-    emptyState.classList.add('hidden');
-    transcriptSection.classList.remove('hidden');
-    suggestionSection.classList.remove('hidden');
-
-    if (isPracticeMode) {
-      practiceInput.classList.remove('hidden');
-      costBar.classList.add('hidden');
-      updateConnectionStatus('practice');
-    } else {
-      practiceInput.classList.add('hidden');
-      costBar.classList.remove('hidden');
-      updateConnectionStatus('recording');
-    }
-
-    // Disable settings during call
-    practiceToggle.disabled = true;
-    leadTypeSelect.disabled = true;
-
-    connectResultsWs();
+    liveSetup.classList.add('hidden');
+    btnStart.classList.add('hidden');
+    btnStop.classList.remove('hidden');
+    btnPause.classList.remove('hidden');
+    callTimer.classList.remove('hidden');
+    transcriptSectionLive.classList.remove('hidden');
+    suggestionSectionLive.classList.remove('hidden');
+    costBar.classList.remove('hidden');
+    startTimer();
+    connectLiveWs();
   }
 
-  function onCallStopped() {
+  function stopLiveCall() {
+    chrome.runtime.sendMessage({ type: MSG.STOP_CALL });
     isCallActive = false;
-    isPaused = false;
-    callControls.setActive(false);
-    callControls.setPaused(false);
-    updateConnectionStatus('disconnected');
-    disconnectResultsWs();
-    practiceInput.classList.add('hidden');
-
-    // Re-enable settings
-    practiceToggle.disabled = false;
-    leadTypeSelect.disabled = false;
+    liveSetup.classList.remove('hidden');
+    btnStart.classList.remove('hidden');
+    btnStop.classList.add('hidden');
+    btnPause.classList.add('hidden');
+    callTimer.classList.add('hidden');
+    stopTimer();
+    if (resultsWs) { resultsWs.close(); resultsWs = null; }
   }
 
-  function connectResultsWs() {
-    if (resultsWs) {
-      resultsWs.close();
-    }
-
+  function connectLiveWs() {
     let url = WS_BASE_URL + '/ws/results?sessionId=' + sessionId;
-    if (isPracticeMode) {
-      url += '&practiceMode=true';
-    }
-    const leadType = leadTypeSelect.value;
-    if (leadType) {
-      url += '&leadType=' + leadType;
-    }
-
+    if (leadSelect.value) url += '&leadType=' + leadSelect.value;
     resultsWs = new WebSocket(url);
-
-    resultsWs.onopen = () => {
-      console.log('Results WebSocket connected');
-    };
-
     resultsWs.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data);
-        handleResultMessage(message);
-      } catch (err) {
-        console.error('Error parsing result message:', err);
-      }
+        const msg = JSON.parse(event.data);
+        handleLiveMessage(msg);
+      } catch (e) { /* ignore */ }
     };
-
     resultsWs.onclose = () => {
-      if (isCallActive && !isPracticeMode) {
-        reconnectTimer = setTimeout(() => connectResultsWs(), 2000);
+      if (isCallActive) setTimeout(connectLiveWs, 2000);
+    };
+  }
+
+  function handleLiveMessage(msg) {
+    if (msg.type === 'transcript_final') {
+      const entry = document.createElement('div');
+      entry.className = 'transcript-entry transcript-entry--' + msg.speaker;
+      entry.innerHTML =
+        '<span class="speaker-label speaker-label--' + msg.speaker + '">' +
+        (msg.speaker === 'prospect' ? 'Prospect' : 'You') + '</span>' +
+        '<span class="transcript-text">' + escapeHtml(msg.text) + '</span>';
+      transcriptLive.appendChild(entry);
+      transcriptLive.scrollTop = transcriptLive.scrollHeight;
+    }
+    if (msg.type === 'suggestion_start') {
+      const colors = CATEGORY_COLORS[msg.objectionType] || { bg: 'rgba(168,85,247,0.15)', text: '#c084fc' };
+      suggestionContainerLive.innerHTML =
+        '<div class="suggestion-card">' +
+          '<div class="suggestion-card__header">' +
+            '<span class="objection-badge" style="background:' + colors.bg + ';color:' + colors.text + '">' + escapeHtml(msg.objectionLabel) + '</span>' +
+          '</div>' +
+          '<div class="suggestion-card__say-label">SAY THIS:</div>' +
+          '<div class="suggestion-card__script">' + escapeHtml(msg.baseScript) + '</div>' +
+        '</div>';
+    }
+    if (msg.type === 'suggestion_complete') {
+      const card = suggestionContainerLive.querySelector('.suggestion-card__script');
+      if (card) card.textContent = msg.fullScript;
+    }
+    if (msg.type === 'cost_update') {
+      costAmount.textContent = '$' + ((msg.estimatedCostCents || 0) / 100).toFixed(2);
+      costDetail.textContent = (msg.claudeCalls || 0) + ' AI calls';
+    }
+  }
+
+  function startTimer() {
+    const start = Date.now();
+    callTimer.textContent = '00:00';
+    timerInterval = setInterval(() => {
+      const s = Math.floor((Date.now() - start) / 1000);
+      callTimer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }, 1000);
+  }
+  function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  // Listen for call status from service worker
+  if (typeof chrome !== 'undefined' && chrome.runtime) {
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === MSG.CALL_STATUS && !message.isCapturing && isCallActive) {
+        stopLiveCall();
       }
-    };
-
-    resultsWs.onerror = (err) => {
-      console.error('Results WebSocket error:', err);
-    };
-  }
-
-  function disconnectResultsWs() {
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer);
-      reconnectTimer = null;
-    }
-    if (resultsWs) {
-      resultsWs.close();
-      resultsWs = null;
-    }
-  }
-
-  function handleResultMessage(message) {
-    switch (message.type) {
-      case 'transcript_interim':
-        transcriptView.addInterim(message.speaker, message.text);
-        break;
-
-      case 'transcript_final':
-        transcriptView.addFinal(message.speaker, message.text);
-        break;
-
-      case 'suggestion_start':
-        handleSuggestionStart(message);
-        break;
-
-      case 'suggestion_chunk':
-        handleSuggestionChunk(message);
-        break;
-
-      case 'suggestion_complete':
-        handleSuggestionComplete(message);
-        break;
-
-      case 'cost_update':
-        handleCostUpdate(message);
-        break;
-
-      case 'session_status':
-        if (message.status === 'paused') {
-          updateConnectionStatus('paused');
-        }
-        break;
-
-      case 'error':
-        console.error('Server error:', message.code, message.message);
-        break;
-    }
-  }
-
-  function handleSuggestionStart(message) {
-    if (activeSuggestion) {
-      activeSuggestion.setPrevious();
-      previousSuggestions.prepend(activeSuggestion.element);
-    }
-
-    activeSuggestion = new SuggestionCard({
-      suggestionId: message.suggestionId,
-      objectionType: message.objectionType,
-      objectionLabel: message.objectionLabel,
-      baseScript: message.baseScript,
-      triggerText: message.triggerText,
-      latencyMs: message.latencyMs,
-      isPracticeMode: isPracticeMode,
     });
-
-    suggestionContainer.innerHTML = '';
-    suggestionContainer.appendChild(activeSuggestion.element);
-    suggestions.push(activeSuggestion);
   }
 
-  function handleSuggestionChunk(message) {
-    if (activeSuggestion && activeSuggestion.suggestionId === message.suggestionId) {
-      activeSuggestion.appendChunk(message.chunk);
-    }
+  // ==================== UTILS ====================
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
-  function handleSuggestionComplete(message) {
-    if (activeSuggestion && activeSuggestion.suggestionId === message.suggestionId) {
-      activeSuggestion.setComplete(message.fullScript, message.latencyMs);
-    }
-  }
-
-  function handleCostUpdate(message) {
-    const cents = message.estimatedCostCents || 0;
-    const dollars = (cents / 100).toFixed(2);
-    costAmount.textContent = '$' + dollars;
-    costDetail.textContent = message.claudeCalls + ' AI calls';
-  }
-
-  function updateConnectionStatus(status) {
-    const dot = connectionStatus.querySelector('.status-dot');
-    const text = connectionStatus.querySelector('.status-text');
-
-    dot.className = 'status-dot';
-    switch (status) {
-      case 'connected':
-        dot.classList.add('status-dot--connected');
-        text.textContent = 'Connected';
-        break;
-      case 'recording':
-        dot.classList.add('status-dot--recording');
-        text.textContent = 'Recording';
-        break;
-      case 'paused':
-        dot.classList.add('status-dot--paused');
-        text.textContent = 'Paused';
-        break;
-      case 'practice':
-        dot.classList.add('status-dot--practice');
-        text.textContent = 'Practice';
-        break;
-      default:
-        text.textContent = 'Disconnected';
-        break;
-    }
-  }
+  // ==================== INIT ====================
+  renderScenarios();
+  practiceField.focus();
 })();

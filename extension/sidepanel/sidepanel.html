@@ -3,104 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cold Call AI Assistant</title>
+  <title>Cold Call AI</title>
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
   <div class="app">
+    <!-- Header -->
     <header class="header">
       <h1 class="header__title">Cold Call AI</h1>
       <div class="header__status" id="connection-status">
         <span class="status-dot"></span>
-        <span class="status-text">Disconnected</span>
+        <span class="status-text">Ready</span>
       </div>
     </header>
 
-    <!-- Settings Bar: Practice Mode + Lead Type -->
-    <div class="settings-bar">
-      <label class="toggle">
-        <input type="checkbox" id="practice-toggle">
-        <span class="toggle__slider"></span>
-        <span class="toggle__label">Practice</span>
-      </label>
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+      <button class="mode-tab mode-tab--active" data-mode="practice" id="tab-practice">Practice</button>
+      <button class="mode-tab" data-mode="live" id="tab-live">Live Call</button>
+      <button class="mode-tab" data-mode="scripts" id="tab-scripts">Script Library</button>
+    </div>
+
+    <!-- Lead Type Selector (shown in practice + live) -->
+    <div class="lead-bar" id="lead-bar">
       <select class="lead-select" id="lead-type">
-        <option value="">Lead Type</option>
-        <option value="expired">Expired</option>
-        <option value="fsbo">FSBO</option>
-        <option value="frbo">FRBO</option>
+        <option value="">All Lead Types</option>
+        <option value="expired">Expired Listings</option>
+        <option value="fsbo">FSBO (For Sale By Owner)</option>
+        <option value="frbo">FRBO (Landlord / Rental)</option>
         <option value="pre-foreclosure">Pre-Foreclosure</option>
       </select>
     </div>
 
-    <!-- Call Controls -->
-    <div class="call-controls" id="call-controls">
-      <button class="btn btn--start" id="btn-start">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M13.6 10.3l-2.8-1.2a.7.7 0 00-.7.1l-1.3 1.1a.4.4 0 01-.4 0A10 10 0 015.7 7.6a.4.4 0 010-.4L6.8 5.9a.7.7 0 00.1-.7L5.7 2.4a.7.7 0 00-.8-.4l-2.4.6A.7.7 0 002 3.3 12.1 12.1 0 0012.7 14a.7.7 0 00.7-.5l.6-2.4a.7.7 0 00-.4-.8z"/>
-        </svg>
-        Start Call
-      </button>
-      <button class="btn btn--pause hidden" id="btn-pause">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <rect x="4" y="3" width="3" height="10" rx="1"/>
-          <rect x="9" y="3" width="3" height="10" rx="1"/>
-        </svg>
-        Pause
-      </button>
-      <button class="btn btn--stop hidden" id="btn-stop">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <rect x="3" y="3" width="10" height="10" rx="1"/>
-        </svg>
-        End
-      </button>
-      <div class="call-timer hidden" id="call-timer">00:00</div>
-    </div>
+    <!-- ==================== PRACTICE MODE ==================== -->
+    <div class="mode-content" id="mode-practice">
+      <!-- Quick Scenarios -->
+      <div class="scenarios" id="scenarios">
+        <div class="section-label">Click a common objection to practice:</div>
+        <div class="scenario-grid" id="scenario-grid"></div>
+      </div>
 
-    <!-- Cost Display -->
-    <div class="cost-bar hidden" id="cost-bar">
-      <span class="cost-bar__label">Cost:</span>
-      <span class="cost-bar__amount" id="cost-amount">$0.00</span>
-      <span class="cost-bar__detail" id="cost-detail"></span>
-    </div>
+      <!-- Or Type Custom -->
+      <div class="practice-input" id="practice-input">
+        <div class="section-label">Or type what the prospect says:</div>
+        <div class="practice-input__row">
+          <input type="text" class="practice-input__field" id="practice-field"
+            placeholder='e.g. "We already tried selling and it didn&apos;t work"'
+            autocomplete="off">
+          <button class="btn btn--send" id="practice-send">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1.7 1.2l13 6.3a.5.5 0 010 .9l-13 6.3a.5.5 0 01-.7-.6L3 8 1 2a.5.5 0 01.7-.8z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
 
-    <!-- Practice Mode Input -->
-    <div class="practice-input hidden" id="practice-input">
-      <div class="section-label">Practice Mode — Type what the prospect says</div>
-      <div class="practice-input__row">
-        <input type="text" class="practice-input__field" id="practice-field" placeholder='e.g. "We&apos;re not interested in selling right now"' autocomplete="off">
-        <button class="btn btn--send" id="practice-send">Send</button>
+      <!-- Transcript -->
+      <div class="transcript-section" id="transcript-section-practice">
+        <div class="transcript" id="transcript-practice"></div>
+      </div>
+
+      <!-- Script Suggestion -->
+      <div class="suggestion-section" id="suggestion-section-practice">
+        <div id="suggestion-container-practice"></div>
+      </div>
+
+      <!-- Empty state for first load -->
+      <div class="empty-hint" id="empty-hint-practice">
+        <p>Select a lead type above, then click an objection or type one to see the perfect response instantly.</p>
       </div>
     </div>
 
-    <!-- Transcript -->
-    <div class="transcript-section hidden" id="transcript-section">
-      <div class="section-label">Live Transcript</div>
-      <div class="transcript" id="transcript"></div>
-    </div>
-
-    <!-- Suggestions -->
-    <div class="suggestion-section hidden" id="suggestion-section">
-      <div class="section-label">AI Suggestion</div>
-      <div id="suggestion-container"></div>
-      <div id="previous-suggestions"></div>
-    </div>
-
-    <!-- Empty State -->
-    <div class="empty-state" id="empty-state">
-      <div class="empty-state__icon">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M34 28l-7-3a2 2 0 00-2 0l-3 3a1 1 0 01-1 0 24 24 0 01-7-7 1 1 0 010-1l3-3a2 2 0 000-2l-3-7a2 2 0 00-2-1l-6 1a2 2 0 00-1 2A30 30 0 0032 37a2 2 0 002-1l1-6a2 2 0 00-1-2z"/>
-        </svg>
+    <!-- ==================== LIVE CALL MODE ==================== -->
+    <div class="mode-content hidden" id="mode-live">
+      <div class="call-controls">
+        <button class="btn btn--start" id="btn-start">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M13.6 10.3l-2.8-1.2a.7.7 0 00-.7.1l-1.3 1.1a.4.4 0 01-.4 0A10 10 0 015.7 7.6a.4.4 0 010-.4L6.8 5.9a.7.7 0 00.1-.7L5.7 2.4a.7.7 0 00-.8-.4l-2.4.6A.7.7 0 002 3.3 12.1 12.1 0 0012.7 14a.7.7 0 00.7-.5l.6-2.4a.7.7 0 00-.4-.8z"/>
+          </svg>
+          Start Call
+        </button>
+        <button class="btn btn--pause hidden" id="btn-pause">Pause</button>
+        <button class="btn btn--stop hidden" id="btn-stop">End Call</button>
+        <div class="call-timer hidden" id="call-timer">00:00</div>
       </div>
-      <p class="empty-state__text">Select a lead type, then click <strong>Start Call</strong> to begin.</p>
-      <p class="empty-state__hint">Toggle <strong>Practice</strong> to test scripts without using API credits.</p>
+
+      <div class="cost-bar hidden" id="cost-bar">
+        <span class="cost-bar__label">Cost:</span>
+        <span class="cost-bar__amount" id="cost-amount">$0.00</span>
+        <span class="cost-bar__detail" id="cost-detail"></span>
+      </div>
+
+      <div class="transcript-section hidden" id="transcript-section-live">
+        <div class="section-label">Live Transcript</div>
+        <div class="transcript" id="transcript-live"></div>
+      </div>
+
+      <div class="suggestion-section hidden" id="suggestion-section-live">
+        <div class="section-label">Say This</div>
+        <div id="suggestion-container-live"></div>
+        <div id="previous-suggestions-live"></div>
+      </div>
+
+      <div class="live-setup" id="live-setup">
+        <div class="live-setup__icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M28 23l-6-2.5a1.5 1.5 0 00-1.5.1l-2.5 2a.8.8 0 01-.8 0A20 20 0 0111 17a.8.8 0 010-.8l2-2.5a1.5 1.5 0 00.1-1.5L10.5 6A1.5 1.5 0 009 5l-5 1A1.5 1.5 0 003 7.5 25 25 0 0027.5 32a1.5 1.5 0 001.5-1l1-5a1.5 1.5 0 00-1-1.5z"/>
+          </svg>
+        </div>
+        <h3>Live Call Mode</h3>
+        <p>Requires the server running locally.</p>
+        <ol>
+          <li>Open your dialer in a Chrome tab</li>
+          <li>Run <code>cd server && npm run dev</code> in Terminal</li>
+          <li>Click <strong>Start Call</strong> on the dialer tab</li>
+        </ol>
+        <p class="live-setup__hint">Use <strong>Practice</strong> mode to learn scripts first — no setup needed.</p>
+      </div>
+    </div>
+
+    <!-- ==================== SCRIPT LIBRARY ==================== -->
+    <div class="mode-content hidden" id="mode-scripts">
+      <div class="script-library" id="script-library"></div>
     </div>
   </div>
 
-  <script src="components/transcript-view.js"></script>
-  <script src="components/objection-badge.js"></script>
-  <script src="components/suggestion-card.js"></script>
-  <script src="components/call-controls.js"></script>
+  <script src="data/scripts-data.js"></script>
+  <script src="engine/objection-engine.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>
