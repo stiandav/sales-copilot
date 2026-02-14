@@ -245,3 +245,59 @@ const LEAD_TYPE_LABELS = {
   frbo: "FRBO (Landlord)",
   "pre-foreclosure": "Pre-Foreclosure",
 };
+
+// Opening scripts — what to say when the prospect picks up the phone
+const OPENING_SCRIPTS = {
+  "": {
+    script: "Hi, is this ___? Hey ___, my name is ___ and I work with a real estate team here in San Diego County. The reason for my call — I've been tracking homes in your neighborhood and I noticed something I wanted to share with you. Do you have just two minutes?",
+    followUp: "Great. So here's the thing — inventory in your area is really low right now, which means homes like yours are in high demand. Buyers are competing for properties. I put together a quick analysis on your home and I think you'd be surprised at what it could sell for. Would you be open to hearing those numbers?",
+  },
+  expired: {
+    script: "Hi, is this ___? Hey ___, my name is ___ and I'm with a real estate team here in San Diego. I'm calling because I noticed your home was on the market and the listing has expired. I specialize in helping homeowners in your situation and I wanted to reach out. Are you still thinking about selling?",
+    followUp: "I understand. Here's why I'm calling though — the market has shifted since your listing expired and homes in your neighborhood are actually selling faster now. Our team has a dedicated listing specialist and we invest over $30,000 a month in marketing. What if I could show you exactly what went wrong last time and a plan to get it sold this time? No commitment at all.",
+  },
+  fsbo: {
+    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in San Diego. I saw that you're selling your home on your own and I respect that. I'm calling because I work with a lot of buyers in your area and I wanted to see if you'd be open to hearing what a partnership could look like?",
+    followUp: "I totally get wanting to save on commission — that's smart. Here's what I can offer: our team spends $30,000 a month on marketing and we have access to every qualified buyer in the MLS. What if I showed you the numbers — what your home would likely sell for with us versus on your own? If the math doesn't make sense, I'll be the first to tell you to keep doing what you're doing.",
+  },
+  frbo: {
+    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in San Diego. I noticed you have a rental property in the area and I wanted to reach out. With the way San Diego property values have gone up, a lot of landlords I talk to are surprised at how much equity they're sitting on. Is that something you've thought about?",
+    followUp: "I hear that. A lot of landlords feel the same way. Here's what I've been seeing though — between rising maintenance costs, the new tenant protection laws, and property values near historic highs, many owners are finding they can take their equity and put it into something more passive. What if I ran the numbers for your property? Just so you know exactly where you stand.",
+  },
+  "pre-foreclosure": {
+    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in San Diego. I'm reaching out because I help homeowners explore their options during challenging situations. This is a completely confidential call. I've helped several families in your area navigate this and come out in a much better position. Would you be open to a quick conversation?",
+    followUp: "I completely understand, and I want you to know I'm not here to pressure you. The good news is San Diego property values have gone up significantly — you likely have more equity than you realize, which means you have options. What if I put together a confidential property valuation? Everything stays between us, and you'll have real numbers to work with.",
+  },
+};
+
+// Close scripts — what to say to book the appointment
+const CLOSE_SCRIPTS = [
+  {
+    label: "Soft Close",
+    script: "What I'd love to do is stop by for just 15 minutes, take a quick look at the home, and share some real numbers with you. No listing agreement, no commitment — just information so you can make the best decision. Would tomorrow or the day after work better for you?",
+  },
+  {
+    label: "Calendar Close",
+    script: "Great, let me get something on the calendar. I've got availability this week — what works better for you, morning or afternoon? It'll be just 15 minutes, I promise.",
+  },
+  {
+    label: "Confirm Appointment",
+    script: "Perfect. So I've got you down for ___ at ___. I'll bring a custom market analysis for your home with real comparable sales. Just 15 minutes — no pressure, no listing agreement. You'll have all the info you need to make a confident decision. Sound good?",
+  },
+];
+
+// Quick-tap categories for instant objection coaching during live calls
+const QUICK_TAPS = [
+  { label: "Not Interested", text: "We're not interested in selling right now", icon: "✋" },
+  { label: "Has Agent", text: "We already have an agent we're working with", icon: "🤝" },
+  { label: "Bad Timing", text: "This isn't a good time, I'm busy right now", icon: "⏰" },
+  { label: "Price / Fees", text: "I don't want to pay agent commission fees, too expensive", icon: "💰" },
+  { label: "DIY / FSBO", text: "We want to sell it ourselves, don't need an agent", icon: "🔨" },
+  { label: "Zillow/Redfin", text: "We're just going to use Zillow or Redfin instead", icon: "🏠" },
+  { label: "Need Spouse", text: "I need to talk to my wife or husband about this first", icon: "👥" },
+  { label: "Not Selling", text: "We love our home, we're not planning to move at all", icon: "🏡" },
+  { label: "Bad Experience", text: "We had a bad experience with our last agent, it didn't sell", icon: "😤" },
+  { label: "Market Concern", text: "I think the market is down right now, prices are dropping", icon: "📉" },
+  { label: "Financial", text: "We're struggling with payments and things are tight right now", icon: "😟" },
+  { label: "Do Not Call", text: "Please take me off your list, don't call me again", icon: "🚫" },
+];

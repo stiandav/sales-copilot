@@ -149,59 +149,109 @@
 
     <!-- ==================== LIVE CALL MODE ==================== -->
     <div class="mode-content hidden" id="mode-live">
-      <div class="call-controls">
-        <button class="btn btn--start" id="btn-start">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M13.6 10.3l-2.8-1.2a.7.7 0 00-.7.1l-1.3 1.1a.4.4 0 01-.4 0A10 10 0 015.7 7.6a.4.4 0 010-.4L6.8 5.9a.7.7 0 00.1-.7L5.7 2.4a.7.7 0 00-.8-.4l-2.4.6A.7.7 0 002 3.3 12.1 12.1 0 0012.7 14a.7.7 0 00.7-.5l.6-2.4a.7.7 0 00-.4-.8z"/>
-          </svg>
-          Start Call
-        </button>
-        <button class="btn btn--pause hidden" id="btn-pause">Pause</button>
-        <button class="btn btn--stop hidden" id="btn-stop">End Call</button>
-        <div class="call-timer hidden" id="call-timer">00:00</div>
-      </div>
-
-      <div class="cost-bar hidden" id="cost-bar">
-        <span class="cost-bar__label">Cost:</span>
-        <span class="cost-bar__amount" id="cost-amount">$0.00</span>
-        <span class="cost-bar__detail" id="cost-detail"></span>
-      </div>
-
-      <!-- Live copilot area -->
-      <div class="hidden" id="live-copilot-area">
-        <!-- Latest prospect speech -->
-        <div class="live-prospect-bar" id="live-prospect-bar">
-          <div class="live-prospect-bar__label">
-            <span class="live-dot"></span>
-            Prospect
-          </div>
-          <div class="live-prospect-bar__text" id="live-prospect-text"></div>
+      <!-- Session Stats -->
+      <div class="session-bar" id="session-bar">
+        <div class="session-bar__stat">
+          <span class="session-bar__value" id="session-calls">0</span>
+          <span class="session-bar__label">Calls</span>
         </div>
-
-        <!-- Copilot output -->
-        <div id="copilot-live"></div>
+        <div class="session-bar__stat">
+          <span class="session-bar__value session-bar__value--green" id="session-appts">0</span>
+          <span class="session-bar__label">Appts</span>
+        </div>
+        <div class="session-bar__timer" id="live-timer">00:00</div>
+        <div class="session-bar__listen-mode" id="listen-mode-indicator"></div>
       </div>
 
-      <!-- Transcript (collapsed by default during live) -->
-      <details class="transcript-details hidden" id="transcript-details-live">
-        <summary class="transcript-details__summary">Full Transcript</summary>
-        <div class="transcript" id="transcript-live"></div>
-      </details>
+      <!-- Call Controls -->
+      <div class="live-controls">
+        <button class="btn btn--live-start" id="btn-live-start">Start Listening</button>
+        <button class="btn btn--live-end hidden" id="btn-live-end">End Call</button>
+        <button class="btn btn--live-next hidden" id="btn-live-next">Next Call</button>
+        <button class="btn btn--live-appt hidden" id="btn-live-appt">Appointment Set!</button>
+      </div>
 
+      <!-- Opening Script Card -->
+      <div class="opening-card hidden" id="opening-card">
+        <div class="opening-card__label">START WITH THIS:</div>
+        <div class="opening-card__script" id="opening-script"></div>
+        <button class="opening-card__followup-btn" id="opening-followup-btn">They're listening — show follow-up</button>
+        <div class="opening-card__followup hidden" id="opening-followup"></div>
+      </div>
+
+      <!-- SAY THIS — Mindless Mode -->
+      <div class="say-this hidden" id="say-this">
+        <div class="say-this__label">SAY THIS:</div>
+        <div class="say-this__script" id="say-this-script"></div>
+        <div class="say-this__signal" id="say-this-signal"></div>
+        <button class="say-this__more" id="say-this-more">More Options</button>
+        <div class="say-this__options hidden" id="say-this-options"></div>
+      </div>
+
+      <!-- Close Scripts -->
+      <div class="close-card hidden" id="close-card">
+        <div class="close-card__label">CLOSE FOR APPOINTMENT:</div>
+        <div class="close-card__script" id="close-script"></div>
+        <div class="close-card__nav">
+          <button class="close-card__btn" id="close-soft">Soft Close</button>
+          <button class="close-card__btn" id="close-calendar">Calendar Close</button>
+          <button class="close-card__btn" id="close-confirm">Confirm</button>
+        </div>
+      </div>
+
+      <!-- Quick-Tap Grid -->
+      <div class="quick-tap" id="quick-tap">
+        <div class="quick-tap__label">WHAT DID THEY SAY? (tap to get response)</div>
+        <div class="quick-tap-grid" id="quick-tap-grid"></div>
+        <button class="quick-tap__close-btn" id="quick-tap-close">Close for Appointment</button>
+      </div>
+
+      <!-- Listen Status Bar -->
+      <div class="listen-bar hidden" id="listen-bar">
+        <div class="listen-bar__dot"></div>
+        <span class="listen-bar__text" id="listen-bar-text">Listening...</span>
+        <span class="listen-bar__interim" id="listen-bar-interim"></span>
+      </div>
+
+      <!-- Setup (shown before first call) -->
       <div class="live-setup" id="live-setup">
-        <div class="live-setup__icon">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M28 23l-6-2.5a1.5 1.5 0 00-1.5.1l-2.5 2a.8.8 0 01-.8 0A20 20 0 0111 17a.8.8 0 010-.8l2-2.5a1.5 1.5 0 00.1-1.5L10.5 6A1.5 1.5 0 009 5l-5 1A1.5 1.5 0 003 7.5 25 25 0 0027.5 32a1.5 1.5 0 001.5-1l1-5a1.5 1.5 0 00-1-1.5z"/>
-          </svg>
+        <h3>Live Call Coaching</h3>
+        <p>AI tells you exactly what to say during your Mojo, Vulcan7, or FollowUpBoss calls.</p>
+        <div class="live-setup__steps">
+          <div class="live-setup__step">
+            <span class="live-setup__step-num">1</span>
+            <span>Select your lead type above</span>
+          </div>
+          <div class="live-setup__step">
+            <span class="live-setup__step-num">2</span>
+            <span>Click <strong>Start Listening</strong> when you dial</span>
+          </div>
+          <div class="live-setup__step">
+            <span class="live-setup__step-num">3</span>
+            <span>Read the opening script, then tap what they say</span>
+          </div>
         </div>
-        <h3>Live Call Mode</h3>
-        <p>Real-time AI coaching during your actual calls.</p>
-        <ol>
-          <li>Open your dialer (Mojo, Vulcan7, etc.) in a Chrome tab</li>
-          <li>Run <code>cd server && npm run dev</code> in Terminal</li>
-          <li>Click <strong>Start Call</strong> while on the dialer tab</li>
-        </ol>
-        <p class="live-setup__hint">Use <strong>Practice</strong> or <strong>Voice Roleplay</strong> to learn scripts first — no setup needed.</p>
+
+        <!-- Listen Mode Selection -->
+        <div class="listen-mode-select">
+          <div class="listen-mode-select__label">Listen mode:</div>
+          <div class="listen-mode-btns">
+            <button class="listen-mode-btn listen-mode-btn--active" data-mode="mic" id="mode-mic-btn">Mic (Free)</button>
+            <button class="listen-mode-btn" data-mode="tab" id="mode-tab-btn">Tab Audio (Pro)</button>
+          </div>
+          <div class="listen-mode-desc" id="listen-mode-desc">Uses your microphone — works with any call. Put prospect on speaker.</div>
+        </div>
+
+        <!-- API Key (for Tab Audio mode) -->
+        <div class="api-key-section hidden" id="api-key-section">
+          <div class="api-key-section__label">Deepgram API Key:</div>
+          <div class="api-key-section__row">
+            <input type="password" class="api-key-input" id="deepgram-key-input" placeholder="Enter your Deepgram API key" autocomplete="off">
+            <button class="btn btn--save-key" id="save-key-btn">Save</button>
+          </div>
+          <div class="api-key-section__status" id="key-status"></div>
+          <div class="api-key-section__hint">Tab Audio mode captures prospect audio directly from your dialer tab. More accurate than mic for headset users.</div>
+        </div>
       </div>
     </div>
 

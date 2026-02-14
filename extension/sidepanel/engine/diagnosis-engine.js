@@ -360,5 +360,35 @@ var DiagnosisEngine = (function () {
     };
   }
 
-  return { diagnose: diagnose };
+  function getOpeningScript(leadType) {
+    if (typeof OPENING_SCRIPTS === 'undefined') return null;
+    return OPENING_SCRIPTS[leadType] || OPENING_SCRIPTS[''] || null;
+  }
+
+  function getCloseScript(index) {
+    if (typeof CLOSE_SCRIPTS === 'undefined') return null;
+    var idx = index || 0;
+    return CLOSE_SCRIPTS[Math.min(idx, CLOSE_SCRIPTS.length - 1)] || null;
+  }
+
+  // Detect if prospect is warming up / showing buying signals
+  function detectBuyingSignal(text) {
+    if (!text) return false;
+    var lower = text.toLowerCase();
+    var buyingPatterns = [
+      /i guess|i suppose|couldn't hurt|might be|maybe|possibly|open to/i,
+      /what would that look like|how would that work|tell me more/i,
+      /when (would|could|can) you|what's your schedule|come by/i,
+      /send me|email me|give me your (card|info|number)/i,
+      /okay|alright|sure|fine|let's do it|sounds good|why not/i,
+    ];
+    return buyingPatterns.some(function (p) { return p.test(lower); });
+  }
+
+  return {
+    diagnose: diagnose,
+    getOpeningScript: getOpeningScript,
+    getCloseScript: getCloseScript,
+    detectBuyingSignal: detectBuyingSignal,
+  };
 })();

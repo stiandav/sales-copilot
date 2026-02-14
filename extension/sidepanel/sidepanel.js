@@ -459,141 +459,475 @@
   }
 
   // ==================== LIVE CALL MODE ====================
-  var WS_BASE_URL = 'ws://localhost:3000';
-  var MSG = { START_CALL: 'start-call', STOP_CALL: 'stop-call', GET_STATUS: 'get-status', CALL_STATUS: 'call-status', PAUSE_CALL: 'pause-call', RESUME_CALL: 'resume-call' };
-  var resultsWs = null, sessionId = null, isCallActive = false;
-  var btnStart = document.getElementById('btn-start');
-  var btnStop = document.getElementById('btn-stop');
-  var btnPause = document.getElementById('btn-pause');
-  var callTimer = document.getElementById('call-timer');
-  var liveSetup = document.getElementById('live-setup');
-  var transcriptLive = document.getElementById('transcript-live');
-  var transcriptDetailsLive = document.getElementById('transcript-details-live');
-  var liveCopilotArea = document.getElementById('live-copilot-area');
-  var liveProspectText = document.getElementById('live-prospect-text');
-  var copilotLive = document.getElementById('copilot-live');
-  var costBar = document.getElementById('cost-bar');
-  var costAmount = document.getElementById('cost-amount');
-  var costDetail = document.getElementById('cost-detail');
-  var timerInterval = null;
+  var MSG_LIVE = {
+    START_CALL: 'start-call',
+    START_CALL_DIRECT: 'start-call-direct',
+    STOP_CALL: 'stop-call',
+    CALL_STATUS: 'call-status',
+    TRANSCRIPTION: 'transcription',
+    CAPTURE_ERROR: 'capture-error',
+  };
 
-  btnStart.addEventListener('click', startLiveCall);
-  btnStop.addEventListener('click', stopLiveCall);
+  // DOM refs
+  var btnLiveStart = document.getElementById('btn-live-start');
+  var btnLiveEnd = document.getElementById('btn-live-end');
+  var btnLiveNext = document.getElementById('btn-live-next');
+  var btnLiveAppt = document.getElementById('btn-live-appt');
+  var liveSetup = document.getElementById('live-setup');
+  var liveTimer = document.getElementById('live-timer');
+  var sessionCallsEl = document.getElementById('session-calls');
+  var sessionApptsEl = document.getElementById('session-appts');
+  var listenModeIndicator = document.getElementById('listen-mode-indicator');
+  var openingCard = document.getElementById('opening-card');
+  var openingScriptEl = document.getElementById('opening-script');
+  var openingFollowUp = document.getElementById('opening-followup');
+  var openingFollowUpBtn = document.getElementById('opening-followup-btn');
+  var sayThis = document.getElementById('say-this');
+  var sayThisScript = document.getElementById('say-this-script');
+  var sayThisSignal = document.getElementById('say-this-signal');
+  var sayThisMore = document.getElementById('say-this-more');
+  var sayThisOptions = document.getElementById('say-this-options');
+  var closeCard = document.getElementById('close-card');
+  var closeScriptEl = document.getElementById('close-script');
+  var quickTap = document.getElementById('quick-tap');
+  var quickTapGrid = document.getElementById('quick-tap-grid');
+  var quickTapCloseBtn = document.getElementById('quick-tap-close');
+  var listenBar = document.getElementById('listen-bar');
+  var listenBarText = document.getElementById('listen-bar-text');
+  var listenBarInterim = document.getElementById('listen-bar-interim');
+
+  // Settings DOM
+  var modeMicBtn = document.getElementById('mode-mic-btn');
+  var modeTabBtn = document.getElementById('mode-tab-btn');
+  var listenModeDesc = document.getElementById('listen-mode-desc');
+  var apiKeySection = document.getElementById('api-key-section');
+  var deepgramKeyInput = document.getElementById('deepgram-key-input');
+  var saveKeyBtn = document.getElementById('save-key-btn');
+  var keyStatus = document.getElementById('key-status');
+
+  // Close script buttons
+  var closeSoftBtn = document.getElementById('close-soft');
+  var closeCalendarBtn = document.getElementById('close-calendar');
+  var closeConfirmBtn = document.getElementById('close-confirm');
+
+  // State
+  var isLiveActive = false;
+  var liveTimerInterval = null;
+  var liveStartTime = null;
+  var sessionCalls = 0;
+  var sessionAppts = 0;
+  var listenMode = 'mic'; // 'mic' or 'tab'
+  var liveRecognition = null;
+  var savedApiKey = '';
+
+  // ---- Load saved settings ----
+  if (typeof chrome !== 'undefined' && chrome.storage) {
+    chrome.storage.local.get(['listenMode', 'deepgramKey'], function (data) {
+      if (data.listenMode) {
+        listenMode = data.listenMode;
+        updateListenModeUI();
+      }
+      if (data.deepgramKey) {
+        savedApiKey = data.deepgramKey;
+        if (deepgramKeyInput) deepgramKeyInput.value = '••••••••••••';
+      }
+    });
+  }
+
+  // ---- Listen mode toggle ----
+  function updateListenModeUI() {
+    if (modeMicBtn) modeMicBtn.classList.toggle('listen-mode-btn--active', listenMode === 'mic');
+    if (modeTabBtn) modeTabBtn.classList.toggle('listen-mode-btn--active', listenMode === 'tab');
+    if (apiKeySection) apiKeySection.classList.toggle('hidden', listenMode !== 'tab');
+    if (listenModeDesc) {
+      listenModeDesc.textContent = listenMode === 'mic'
+        ? 'Uses your microphone — works with any call. Put prospect on speaker.'
+        : 'Captures audio directly from your dialer tab. Best for headset users. Requires Deepgram API key.';
+    }
+    if (listenModeIndicator) listenModeIndicator.textContent = listenMode === 'mic' ? 'MIC' : 'TAB';
+  }
+
+  if (modeMicBtn) modeMicBtn.addEventListener('click', function () {
+    listenMode = 'mic'; updateListenModeUI();
+    if (typeof chrome !== 'undefined' && chrome.storage) chrome.storage.local.set({ listenMode: 'mic' });
+  });
+  if (modeTabBtn) modeTabBtn.addEventListener('click', function () {
+    listenMode = 'tab'; updateListenModeUI();
+    if (typeof chrome !== 'undefined' && chrome.storage) chrome.storage.local.set({ listenMode: 'tab' });
+  });
+
+  // ---- API key save ----
+  if (saveKeyBtn) saveKeyBtn.addEventListener('click', function () {
+    var key = deepgramKeyInput.value.trim();
+    if (!key || key === '••••••••••••') { keyStatus.textContent = 'Enter a valid key'; keyStatus.style.color = 'var(--accent-red)'; return; }
+    savedApiKey = key;
+    if (typeof chrome !== 'undefined' && chrome.storage) chrome.storage.local.set({ deepgramKey: key });
+    deepgramKeyInput.value = '••••••••••••';
+    keyStatus.textContent = 'Key saved!';
+    keyStatus.style.color = 'var(--accent-green)';
+    setTimeout(function () { keyStatus.textContent = ''; }, 2000);
+  });
+
+  // ---- Build quick-tap grid ----
+  function buildQuickTapGrid() {
+    if (!quickTapGrid) return;
+    quickTapGrid.innerHTML = '';
+    var taps = (typeof QUICK_TAPS !== 'undefined') ? QUICK_TAPS : [];
+    taps.forEach(function (tap) {
+      var btn = document.createElement('button');
+      btn.className = 'quick-tap-btn';
+      btn.textContent = tap.label;
+      btn.title = tap.text;
+      btn.addEventListener('click', function () {
+        handleQuickTap(tap.text);
+      });
+      quickTapGrid.appendChild(btn);
+    });
+  }
+
+  function handleQuickTap(text) {
+    var result = DiagnosisEngine.diagnose(text);
+    if (result) {
+      showSayThis(result);
+      openingCard.classList.add('hidden');
+      closeCard.classList.add('hidden');
+    }
+  }
+
+  // ---- Opening script ----
+  function showOpeningScript() {
+    var leadType = leadSelect.value || '';
+    var opening = DiagnosisEngine.getOpeningScript(leadType);
+    if (!opening) return;
+    openingScriptEl.textContent = opening.script;
+    openingFollowUp.textContent = opening.followUp || '';
+    openingFollowUp.classList.add('hidden');
+    openingFollowUpBtn.classList.remove('hidden');
+    openingCard.classList.remove('hidden');
+    sayThis.classList.add('hidden');
+    closeCard.classList.add('hidden');
+  }
+
+  if (openingFollowUpBtn) openingFollowUpBtn.addEventListener('click', function () {
+    openingFollowUp.classList.remove('hidden');
+    openingFollowUpBtn.classList.add('hidden');
+  });
+
+  // ---- SAY THIS (mindless mode) ----
+  function showSayThis(result) {
+    if (!result || !result.options || result.options.length === 0) return;
+
+    sayThisScript.textContent = result.options[0].script;
+    sayThisSignal.textContent = result.signal ? result.signal.label : '';
+    sayThisSignal.style.display = result.signal ? '' : 'none';
+
+    // Build "more options" content
+    sayThisOptions.innerHTML = '';
+    if (result.options.length > 1) {
+      for (var i = 1; i < result.options.length; i++) {
+        var optDiv = document.createElement('div');
+        optDiv.className = 'copilot__option';
+        optDiv.innerHTML =
+          '<div class="copilot__option-header"><span class="copilot__option-name">' + esc(result.options[i].label) + '</span></div>' +
+          '<div class="copilot__option-script">' + esc(result.options[i].script) + '</div>';
+        optDiv.style.cursor = 'pointer';
+        (function (script) {
+          optDiv.addEventListener('click', function () {
+            sayThisScript.textContent = script;
+            flashSayThis();
+          });
+        })(result.options[i].script);
+        sayThisOptions.appendChild(optDiv);
+      }
+      sayThisMore.style.display = '';
+    } else {
+      sayThisMore.style.display = 'none';
+    }
+    sayThisOptions.classList.add('hidden');
+
+    // Battle card
+    if (result.battleCard) {
+      var bcEl = document.createElement('div');
+      bcEl.className = 'copilot__battlecard';
+      bcEl.innerHTML =
+        '<div class="copilot__bc-header"><span class="copilot__bc-flag">vs</span><span class="copilot__bc-name">' + esc(result.battleCard.competitor) + '</span></div>';
+      result.battleCard.angles.forEach(function (angle) {
+        bcEl.innerHTML += '<div class="copilot__bc-angle"><div class="copilot__bc-angle-title">' + esc(angle.title) + '</div><div class="copilot__bc-angle-text">' + esc(angle.text) + '</div></div>';
+      });
+      sayThisOptions.appendChild(bcEl);
+    }
+
+    sayThis.classList.remove('hidden');
+    flashSayThis();
+    sayThis.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function flashSayThis() {
+    sayThis.classList.remove('say-this--flash');
+    void sayThis.offsetWidth; // force reflow
+    sayThis.classList.add('say-this--flash');
+  }
+
+  if (sayThisMore) sayThisMore.addEventListener('click', function () {
+    var hidden = sayThisOptions.classList.contains('hidden');
+    sayThisOptions.classList.toggle('hidden');
+    sayThisMore.textContent = hidden ? 'Less Options' : 'More Options';
+  });
+
+  // ---- Close scripts ----
+  function showCloseScript(index) {
+    var close = DiagnosisEngine.getCloseScript(index);
+    if (!close) return;
+    closeScriptEl.textContent = close.script;
+    closeCard.classList.remove('hidden');
+    sayThis.classList.add('hidden');
+    openingCard.classList.add('hidden');
+    closeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Highlight active button
+    [closeSoftBtn, closeCalendarBtn, closeConfirmBtn].forEach(function (btn, i) {
+      if (btn) btn.classList.toggle('close-card__btn--active', i === index);
+    });
+  }
+
+  if (closeSoftBtn) closeSoftBtn.addEventListener('click', function () { showCloseScript(0); });
+  if (closeCalendarBtn) closeCalendarBtn.addEventListener('click', function () { showCloseScript(1); });
+  if (closeConfirmBtn) closeConfirmBtn.addEventListener('click', function () { showCloseScript(2); });
+  if (quickTapCloseBtn) quickTapCloseBtn.addEventListener('click', function () { showCloseScript(0); });
+
+  // ---- Start / End / Next Call ----
+  if (btnLiveStart) btnLiveStart.addEventListener('click', startLiveCall);
+  if (btnLiveEnd) btnLiveEnd.addEventListener('click', endLiveCall);
+  if (btnLiveNext) btnLiveNext.addEventListener('click', nextCall);
+  if (btnLiveAppt) btnLiveAppt.addEventListener('click', function () {
+    sessionAppts++;
+    sessionApptsEl.textContent = sessionAppts;
+    nextCall();
+  });
 
   function startLiveCall() {
-    if (typeof chrome === 'undefined' || !chrome.tabs) {
-      alert('Live Call requires running as a Chrome extension.\n\nUse Voice Roleplay or Practice mode instead.');
+    sessionCalls++;
+    sessionCallsEl.textContent = sessionCalls;
+    isLiveActive = true;
+
+    // Hide setup, show active controls
+    liveSetup.classList.add('hidden');
+    btnLiveStart.classList.add('hidden');
+    btnLiveEnd.classList.remove('hidden');
+    btnLiveNext.classList.remove('hidden');
+    btnLiveAppt.classList.remove('hidden');
+    quickTap.classList.remove('hidden');
+    listenBar.classList.remove('hidden');
+
+    // Show opening script
+    showOpeningScript();
+
+    // Start timer
+    liveStartTime = Date.now();
+    liveTimer.textContent = '00:00';
+    liveTimerInterval = setInterval(function () {
+      var s = Math.floor((Date.now() - liveStartTime) / 1000);
+      liveTimer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }, 1000);
+
+    // Start listening based on mode
+    if (listenMode === 'mic') {
+      startMicListen();
+    } else {
+      startTabCapture();
+    }
+
+    updateListenModeUI();
+  }
+
+  function endLiveCall() {
+    isLiveActive = false;
+    stopMicListen();
+    stopTabCapture();
+    if (liveTimerInterval) { clearInterval(liveTimerInterval); liveTimerInterval = null; }
+
+    // Reset UI
+    btnLiveStart.classList.remove('hidden');
+    btnLiveStart.textContent = 'Start Listening';
+    btnLiveEnd.classList.add('hidden');
+    btnLiveNext.classList.add('hidden');
+    btnLiveAppt.classList.add('hidden');
+    openingCard.classList.add('hidden');
+    sayThis.classList.add('hidden');
+    closeCard.classList.add('hidden');
+    listenBar.classList.add('hidden');
+    liveSetup.classList.remove('hidden');
+  }
+
+  function nextCall() {
+    // End current, start fresh for next dial
+    stopMicListen();
+    stopTabCapture();
+    if (liveTimerInterval) { clearInterval(liveTimerInterval); liveTimerInterval = null; }
+
+    // Reset coaching
+    openingCard.classList.add('hidden');
+    sayThis.classList.add('hidden');
+    closeCard.classList.add('hidden');
+
+    // Increment call count and restart
+    sessionCalls++;
+    sessionCallsEl.textContent = sessionCalls;
+    liveStartTime = Date.now();
+    liveTimer.textContent = '00:00';
+    liveTimerInterval = setInterval(function () {
+      var s = Math.floor((Date.now() - liveStartTime) / 1000);
+      liveTimer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }, 1000);
+
+    showOpeningScript();
+
+    if (listenMode === 'mic') { startMicListen(); }
+    else { startTabCapture(); }
+  }
+
+  // ---- MIC LISTEN MODE (free, uses Web Speech API) ----
+  function startMicListen() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      listenBarText.textContent = 'Mic not supported — use quick-tap buttons';
       return;
     }
+
+    liveRecognition = new SR();
+    liveRecognition.continuous = true;
+    liveRecognition.interimResults = true;
+    liveRecognition.lang = 'en-US';
+    liveRecognition.maxAlternatives = 1;
+
+    var accumulatedFinal = '';
+
+    liveRecognition.onresult = function (event) {
+      var interim = '';
+      var newFinal = '';
+      for (var i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          newFinal += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      listenBarInterim.textContent = interim;
+
+      // Process new final transcripts
+      if (newFinal && newFinal !== accumulatedFinal) {
+        var newText = newFinal.slice(accumulatedFinal.length).trim();
+        accumulatedFinal = newFinal;
+        if (newText.length > 8) {
+          processTranscription(newText);
+        }
+      }
+    };
+
+    liveRecognition.onerror = function (event) {
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        listenBarText.textContent = 'Mic blocked — check permissions. Use quick-tap buttons.';
+      } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        listenBarText.textContent = 'Mic error: ' + event.error;
+      }
+    };
+
+    liveRecognition.onend = function () {
+      // Auto-restart if still active
+      if (isLiveActive && listenMode === 'mic') {
+        accumulatedFinal = '';
+        try { liveRecognition.start(); } catch (e) {}
+      }
+    };
+
+    try {
+      liveRecognition.start();
+      listenBarText.textContent = 'Listening...';
+    } catch (e) {
+      listenBarText.textContent = 'Could not start mic — use quick-tap buttons';
+    }
+  }
+
+  function stopMicListen() {
+    if (liveRecognition) {
+      try { liveRecognition.stop(); } catch (e) {}
+      liveRecognition = null;
+    }
+  }
+
+  // ---- TAB CAPTURE MODE (Deepgram direct, needs API key) ----
+  function startTabCapture() {
+    if (!savedApiKey) {
+      listenBarText.textContent = 'No API key — enter Deepgram key in settings or use quick-tap';
+      return;
+    }
+    if (typeof chrome === 'undefined' || !chrome.tabs) {
+      listenBarText.textContent = 'Tab capture requires Chrome extension context';
+      return;
+    }
+
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      var tab = tabs[0]; if (!tab) return;
-      btnStart.disabled = true; btnStart.textContent = 'Starting...';
+      var tab = tabs[0];
+      if (!tab) { listenBarText.textContent = 'No active tab found'; return; }
+
       chrome.runtime.sendMessage(
-        { type: MSG.START_CALL, tabId: tab.id, leadType: leadSelect.value },
+        { type: MSG_LIVE.START_CALL_DIRECT, tabId: tab.id, apiKey: savedApiKey },
         function (response) {
-          btnStart.disabled = false;
           if (chrome.runtime.lastError) {
-            alert('Error: ' + chrome.runtime.lastError.message + '\n\nMake sure you\'re on your dialer tab (not a chrome:// page).');
-            resetStartBtn(); return;
+            listenBarText.textContent = 'Error: ' + chrome.runtime.lastError.message;
+            return;
           }
           if (response && response.success) {
-            sessionId = response.sessionId;
-            onLiveCallStarted();
+            listenBarText.textContent = 'Capturing tab audio...';
           } else {
-            alert('Failed: ' + (response && response.error || 'Unknown') + '\n\nMake sure:\n1. You\'re on your dialer website\n2. Server is running (cd server && npm run dev)');
-            resetStartBtn();
+            listenBarText.textContent = 'Failed: ' + (response && response.error || 'Unknown');
           }
         }
       );
     });
   }
 
-  function resetStartBtn() {
-    btnStart.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.6 10.3l-2.8-1.2a.7.7 0 00-.7.1l-1.3 1.1a.4.4 0 01-.4 0A10 10 0 015.7 7.6a.4.4 0 010-.4L6.8 5.9a.7.7 0 00.1-.7L5.7 2.4a.7.7 0 00-.8-.4l-2.4.6A.7.7 0 002 3.3 12.1 12.1 0 0012.7 14a.7.7 0 00.7-.5l.6-2.4a.7.7 0 00-.4-.8z"/></svg> Start Call';
-  }
-
-  function onLiveCallStarted() {
-    isCallActive = true;
-    liveSetup.classList.add('hidden');
-    btnStart.classList.add('hidden');
-    btnStop.classList.remove('hidden');
-    btnPause.classList.remove('hidden');
-    callTimer.classList.remove('hidden');
-    liveCopilotArea.classList.remove('hidden');
-    transcriptDetailsLive.classList.remove('hidden');
-    costBar.classList.remove('hidden');
-    startLiveTimer();
-    connectLiveWs();
-  }
-
-  function stopLiveCall() {
-    if (typeof chrome !== 'undefined' && chrome.runtime) chrome.runtime.sendMessage({ type: MSG.STOP_CALL });
-    isCallActive = false;
-    liveSetup.classList.remove('hidden');
-    btnStart.classList.remove('hidden');
-    btnStop.classList.add('hidden');
-    btnPause.classList.add('hidden');
-    callTimer.classList.add('hidden');
-    liveCopilotArea.classList.add('hidden');
-    stopLiveTimer();
-    if (resultsWs) { resultsWs.close(); resultsWs = null; }
-  }
-
-  function connectLiveWs() {
-    var url = WS_BASE_URL + '/ws/results?sessionId=' + sessionId;
-    if (leadSelect.value) url += '&leadType=' + leadSelect.value;
-    resultsWs = new WebSocket(url);
-    resultsWs.onmessage = function (event) { try { handleLiveMessage(JSON.parse(event.data)); } catch (e) {} };
-    resultsWs.onclose = function () { if (isCallActive) setTimeout(connectLiveWs, 2000); };
-  }
-
-  function handleLiveMessage(msg) {
-    // Transcript
-    if (msg.type === 'transcript_final') {
-      var entry = document.createElement('div');
-      entry.className = 'transcript-entry transcript-entry--' + msg.speaker;
-      entry.innerHTML = '<span class="speaker-label speaker-label--' + msg.speaker + '">' + (msg.speaker === 'prospect' ? 'Prospect' : 'You') + '</span><span class="transcript-text">' + esc(msg.text) + '</span>';
-      transcriptLive.appendChild(entry);
-      transcriptLive.scrollTop = transcriptLive.scrollHeight;
-
-      // Run diagnosis on prospect speech
-      if (msg.speaker === 'prospect' && msg.text.length > 10) {
-        liveProspectText.textContent = '"' + msg.text + '"';
-        var result = DiagnosisEngine.diagnose(msg.text);
-        if (result) renderCopilotOutput(copilotLive, result);
-      }
-    }
-    // Suggestion from server (AI-adapted)
-    if (msg.type === 'suggestion_start') {
-      // Server suggestions enhance the local diagnosis
-      var serverCard = document.createElement('div');
-      serverCard.className = 'copilot__ai-enhanced';
-      serverCard.innerHTML = '<div class="copilot__ai-label">AI-Adapted Response</div><div class="copilot__option-script">' + esc(msg.baseScript) + '</div>';
-      copilotLive.appendChild(serverCard);
-    }
-    if (msg.type === 'suggestion_complete') {
-      var aiCard = copilotLive.querySelector('.copilot__ai-enhanced .copilot__option-script');
-      if (aiCard) aiCard.textContent = msg.fullScript;
-    }
-    if (msg.type === 'cost_update') {
-      costAmount.textContent = '$' + ((msg.estimatedCostCents || 0) / 100).toFixed(2);
-      costDetail.textContent = (msg.claudeCalls || 0) + ' AI calls';
+  function stopTabCapture() {
+    if (typeof chrome !== 'undefined' && chrome.runtime) {
+      chrome.runtime.sendMessage({ type: MSG_LIVE.STOP_CALL }).catch(function () {});
     }
   }
 
-  function startLiveTimer() {
-    var start = Date.now();
-    callTimer.textContent = '00:00';
-    timerInterval = setInterval(function () {
-      var s = Math.floor((Date.now() - start) / 1000);
-      callTimer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-    }, 1000);
-  }
-  function stopLiveTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+  // ---- Process transcription from any source ----
+  function processTranscription(text) {
+    if (!text || text.trim().length < 5) return;
 
+    // Check for buying signals — suggest close
+    if (DiagnosisEngine.detectBuyingSignal(text)) {
+      // Show the close suggestion alongside the normal coaching
+    }
+
+    var result = DiagnosisEngine.diagnose(text);
+    if (result) {
+      openingCard.classList.add('hidden');
+      closeCard.classList.add('hidden');
+      showSayThis(result);
+    }
+  }
+
+  // ---- Listen for transcription messages from offscreen (tab capture mode) ----
   if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener(function (message) {
-      if (message.type === MSG.CALL_STATUS && !message.isCapturing && isCallActive) stopLiveCall();
+      if (message.type === MSG_LIVE.TRANSCRIPTION && isLiveActive) {
+        if (message.isFinal && message.text && message.text.trim().length > 5) {
+          processTranscription(message.text.trim());
+          listenBarInterim.textContent = '';
+        } else if (!message.isFinal && message.text) {
+          listenBarInterim.textContent = message.text;
+        }
+      }
+      if (message.type === MSG_LIVE.CALL_STATUS && !message.isCapturing && isLiveActive) {
+        // Tab capture stopped externally
+        listenBarText.textContent = 'Tab capture stopped';
+      }
+      if (message.type === MSG_LIVE.CAPTURE_ERROR && isLiveActive) {
+        listenBarText.textContent = message.error || 'Capture error';
+      }
     });
   }
 
@@ -606,5 +940,7 @@
 
   // ==================== INIT ====================
   renderScenarios();
+  buildQuickTapGrid();
+  updateListenModeUI();
   practiceField.focus();
 })();

@@ -1,18 +1,20 @@
 const MSG = {
   START_CAPTURE: 'start-capture',
+  START_CAPTURE_DIRECT: 'start-capture-direct',
   STOP_CAPTURE: 'stop-capture',
   CAPTURE_STARTED: 'capture-started',
   CAPTURE_STOPPED: 'capture-stopped',
   CAPTURE_ERROR: 'capture-error',
   START_CALL: 'start-call',
+  START_CALL_DIRECT: 'start-call-direct',
   STOP_CALL: 'stop-call',
   GET_STATUS: 'get-status',
   CALL_STATUS: 'call-status',
-  SESSION_ID: 'session-id',
   PAUSE_CALL: 'pause-call',
   RESUME_CALL: 'resume-call',
   PAUSE_CAPTURE: 'pause-capture',
   RESUME_CAPTURE: 'resume-capture',
+  TRANSCRIPTION: 'transcription',
 };
 
 let currentSessionId = null;
@@ -26,6 +28,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
     case MSG.START_CALL:
       handleStartCall(message.tabId, message.leadType).then(sendResponse);
+      return true;
+
+    case MSG.START_CALL_DIRECT:
+      handleStartCallDirect(message.tabId, message.apiKey).then(sendResponse);
       return true;
 
     case MSG.STOP_CALL:
@@ -56,17 +62,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return false;
 
     case MSG.PAUSE_CALL:
-      // Relay pause to offscreen document
       chrome.runtime.sendMessage({ type: MSG.PAUSE_CAPTURE }).catch(() => {});
       return false;
 
     case MSG.RESUME_CALL:
-      // Relay resume to offscreen document
       chrome.runtime.sendMessage({ type: MSG.RESUME_CAPTURE }).catch(() => {});
       return false;
+
+    // Transcription messages from offscreen are automatically received by
+    // all extension pages (including sidepanel) via chrome.runtime.onMessage.
+    // No explicit relay needed.
   }
 });
 
+// Direct Deepgram mode — no local server, connects to Deepgram from offscreen doc
+async function handleStartCallDirect(tabId, apiKey) {
+  try {
+    currentSessionId = crypto.randomUUID();
+
+    const streamId = await chrome.tabCapture.getMediaStreamId({
+      targetTabId: tabId,
+    });
+
+    await createOffscreenDocument();
+
+    chrome.runtime.sendMessage({
+      type: MSG.START_CAPTURE_DIRECT,
+      streamId,
+      apiKey,
+    });
+
+    return { success: true, sessionId: currentSessionId };
+  } catch (error) {
+    console.error('Failed to start direct call:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Server relay mode (legacy)
 async function handleStartCall(tabId, leadType) {
   try {
     currentSessionId = crypto.randomUUID();
@@ -77,7 +110,6 @@ async function handleStartCall(tabId, leadType) {
 
     await createOffscreenDocument();
 
-    // Send to offscreen document via a direct message
     chrome.runtime.sendMessage({
       type: MSG.START_CAPTURE,
       streamId,
