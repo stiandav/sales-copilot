@@ -83,13 +83,11 @@
     // Show in transcript
     addTranscriptEntry('prospect', text);
 
-    // Detect objection locally
+    // Detect objection locally — always returns a match (exact, keyword, or bridge)
     const match = engine.detect(text);
 
     if (match) {
       showSuggestion(match);
-    } else {
-      showNoMatch(text);
     }
 
     // Scroll to suggestion
@@ -122,36 +120,34 @@
     const card = document.createElement('div');
     card.className = 'suggestion-card';
 
+    // Match type indicator
+    var matchLabel = '';
+    if (match.matchType === 'keyword') {
+      matchLabel = '<span class="match-type match-type--keyword">Keyword Match</span>';
+    } else if (match.matchType === 'bridge') {
+      matchLabel = '<span class="match-type match-type--bridge">Smart Response</span>';
+    }
+
+    // Trigger line
+    var triggerHtml = '';
+    if (match.matchType === 'exact') {
+      triggerHtml = '<div class="suggestion-card__trigger">Matched: "' + escapeHtml(match.matchedPattern) + '"</div>';
+    } else if (match.matchType === 'keyword') {
+      triggerHtml = '<div class="suggestion-card__trigger">Keywords matched: ' + escapeHtml(match.matchedPattern) + '</div>';
+    } else {
+      triggerHtml = '<div class="suggestion-card__trigger">Responding to: "' + escapeHtml(match.triggerText) + '"</div>';
+    }
+
     card.innerHTML =
       '<div class="suggestion-card__header">' +
         '<span class="objection-badge" style="background:' + colors.bg + ';color:' + colors.text + '">' +
           escapeHtml(script.label) +
         '</span>' +
+        matchLabel +
       '</div>' +
       '<div class="suggestion-card__say-label">SAY THIS:</div>' +
       '<div class="suggestion-card__script">' + escapeHtml(script.script) + '</div>' +
-      '<div class="suggestion-card__trigger">Triggered by: "' + escapeHtml(match.triggerText) + '"</div>';
-
-    suggestionContainer.appendChild(card);
-  }
-
-  function showNoMatch(text) {
-    suggestionContainer.innerHTML = '';
-
-    const card = document.createElement('div');
-    card.className = 'suggestion-card';
-    card.style.borderColor = 'var(--border)';
-    card.style.boxShadow = 'none';
-
-    card.innerHTML =
-      '<div class="suggestion-card__header">' +
-        '<span class="objection-badge" style="background:rgba(95,99,104,0.15);color:var(--text-dim)">No Match</span>' +
-      '</div>' +
-      '<div class="suggestion-card__script" style="color:var(--text-secondary);font-size:14px">' +
-        'No specific objection detected. Try responding with curiosity: ' +
-        '"That\'s interesting \u2014 can you tell me more about that?"' +
-      '</div>' +
-      '<div class="suggestion-card__trigger">Input: "' + escapeHtml(text) + '"</div>';
+      triggerHtml;
 
     suggestionContainer.appendChild(card);
   }

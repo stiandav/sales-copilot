@@ -235,6 +235,7 @@ const CATEGORY_COLORS = {
   WANT_TO_TRY_MYSELF: { bg: "rgba(249,115,22,0.15)", text: "#fb923c" },
   TENANT_ISSUES: { bg: "rgba(52,168,83,0.15)", text: "#4ade80" },
   FINANCIAL_DISTRESS: { bg: "rgba(234,67,53,0.15)", text: "#f87171" },
+  BRIDGE: { bg: "rgba(168,85,247,0.15)", text: "#c084fc" },
 };
 
 const LEAD_TYPE_LABELS = {

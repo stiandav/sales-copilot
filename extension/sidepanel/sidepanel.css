@@ -330,6 +330,24 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* Match Type Badge */
+.match-type {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.match-type--keyword {
+  background: rgba(77, 158, 246, 0.12);
+  color: var(--accent-blue);
+}
+.match-type--bridge {
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--accent-purple);
+}
+
 /* Empty Hint */
 .empty-hint {
   padding: 20px;
