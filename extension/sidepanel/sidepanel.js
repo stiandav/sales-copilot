@@ -817,37 +817,65 @@ function initApp() {
       btn.textContent = tap.label;
       btn.title = tap.text;
       btn.addEventListener('click', function () {
-        handleQuickTap(tap.text);
+        handleQuickTap(tap);
       });
       quickTapGrid.appendChild(btn);
     });
   }
 
-  function handleQuickTap(text) {
-    var result = DiagnosisEngine.diagnose(text);
-    if (result) {
-      showSayThis(result);
-      openingCard.classList.add('hidden');
-      closeCard.classList.add('hidden');
-    }
+  function handleQuickTap(tap) {
+    // Live mode: show one-liner response directly, no diagnosis
+    showSayThisOneLiner(tap.response || tap.text);
+    openingCard.classList.add('hidden');
+    closeCard.classList.add('hidden');
   }
 
   function handleCustomQuickTap(cs) {
-    // For custom scripts, show directly in SAY THIS with the user's own script
-    var customResult = {
-      signal: { label: ScriptExtractor.CATEGORY_LABELS[cs.category] || cs.category },
-      options: [{ label: cs.label, script: personalizeScript(cs.script) }],
-    };
-    // Also try built-in diagnosis for additional options
-    var builtIn = DiagnosisEngine.diagnose(cs.objection || cs.label);
-    if (builtIn && builtIn.options) {
-      for (var i = 0; i < builtIn.options.length; i++) {
-        customResult.options.push(builtIn.options[i]);
-      }
-    }
-    showSayThis(customResult);
+    // For custom scripts, show the script directly as a one-liner
+    showSayThisOneLiner(personalizeScript(cs.script));
     openingCard.classList.add('hidden');
     closeCard.classList.add('hidden');
+  }
+
+  // ---- Find best matching one-liner from QUICK_TAPS for detected speech ----
+  function findBestResponse(text) {
+    if (!text || text.trim().length < 5) return null;
+    var lower = text.toLowerCase();
+    var leadType = leadSelect ? leadSelect.value : '';
+    var taps = (typeof QUICK_TAPS !== 'undefined') ? (QUICK_TAPS[leadType] || QUICK_TAPS[''] || []) : [];
+    var allTaps = taps;
+    // Also check generic taps if a lead type is selected
+    if (leadType && typeof QUICK_TAPS !== 'undefined' && QUICK_TAPS['']) {
+      allTaps = taps.concat(QUICK_TAPS['']);
+    }
+
+    var bestScore = 0;
+    var bestTap = null;
+
+    for (var i = 0; i < allTaps.length; i++) {
+      var tap = allTaps[i];
+      var keywords = tap.text.toLowerCase().split(/\s+/);
+      var score = 0;
+      for (var k = 0; k < keywords.length; k++) {
+        if (keywords[k].length > 3 && lower.indexOf(keywords[k]) !== -1) {
+          score++;
+        }
+      }
+      // Also check the label
+      if (lower.indexOf(tap.label.toLowerCase()) !== -1) {
+        score += 2;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestTap = tap;
+      }
+    }
+
+    // Require at least 2 keyword matches
+    if (bestScore >= 2 && bestTap && bestTap.response) {
+      return bestTap.response;
+    }
+    return null;
   }
 
   // ---- Opening script ----
@@ -869,53 +897,24 @@ function initApp() {
     openingFollowUpBtn.classList.add('hidden');
   });
 
-  // ---- SAY THIS (mindless mode) ----
-  function showSayThis(result) {
-    if (!result || !result.options || result.options.length === 0) return;
-
-    sayThisScript.textContent = result.options[0].script;
-    sayThisSignal.textContent = result.signal ? result.signal.label : '';
-    sayThisSignal.style.display = result.signal ? '' : 'none';
-
-    // Build "more options" content
+  // ---- SAY THIS (mindless mode — one sentence only) ----
+  function showSayThisOneLiner(text) {
+    if (!text) return;
+    sayThisScript.textContent = text;
+    sayThisSignal.style.display = 'none';
+    sayThisMore.style.display = 'none';
     sayThisOptions.innerHTML = '';
-    if (result.options.length > 1) {
-      for (var i = 1; i < result.options.length; i++) {
-        var optDiv = document.createElement('div');
-        optDiv.className = 'copilot__option';
-        optDiv.innerHTML =
-          '<div class="copilot__option-header"><span class="copilot__option-name">' + esc(result.options[i].label) + '</span></div>' +
-          '<div class="copilot__option-script">' + esc(result.options[i].script) + '</div>';
-        optDiv.style.cursor = 'pointer';
-        (function (script) {
-          optDiv.addEventListener('click', function () {
-            sayThisScript.textContent = script;
-            flashSayThis();
-          });
-        })(result.options[i].script);
-        sayThisOptions.appendChild(optDiv);
-      }
-      sayThisMore.style.display = '';
-    } else {
-      sayThisMore.style.display = 'none';
-    }
     sayThisOptions.classList.add('hidden');
-
-    // Battle card
-    if (result.battleCard) {
-      var bcEl = document.createElement('div');
-      bcEl.className = 'copilot__battlecard';
-      bcEl.innerHTML =
-        '<div class="copilot__bc-header"><span class="copilot__bc-flag">vs</span><span class="copilot__bc-name">' + esc(result.battleCard.competitor) + '</span></div>';
-      result.battleCard.angles.forEach(function (angle) {
-        bcEl.innerHTML += '<div class="copilot__bc-angle"><div class="copilot__bc-angle-title">' + esc(angle.title) + '</div><div class="copilot__bc-angle-text">' + esc(angle.text) + '</div></div>';
-      });
-      sayThisOptions.appendChild(bcEl);
-    }
 
     sayThis.classList.remove('hidden');
     flashSayThis();
     sayThis.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Legacy showSayThis kept for any edge cases — now simplified
+  function showSayThis(result) {
+    if (!result || !result.options || result.options.length === 0) return;
+    showSayThisOneLiner(result.options[0].script);
   }
 
   function flashSayThis() {
@@ -924,6 +923,7 @@ function initApp() {
     sayThis.classList.add('say-this--flash');
   }
 
+  // More options button disabled in one-liner mode but kept for compatibility
   if (sayThisMore) sayThisMore.addEventListener('click', function () {
     var hidden = sayThisOptions.classList.contains('hidden');
     sayThisOptions.classList.toggle('hidden');
@@ -1155,14 +1155,16 @@ function initApp() {
 
     // Check for buying signals — suggest close
     if (DiagnosisEngine.detectBuyingSignal(text)) {
-      // Show the close suggestion alongside the normal coaching
+      showCloseScript(0);
+      return;
     }
 
-    var result = DiagnosisEngine.diagnose(text);
-    if (result) {
+    // Find best one-liner response from QUICK_TAPS
+    var oneLiner = findBestResponse(text);
+    if (oneLiner) {
       openingCard.classList.add('hidden');
       closeCard.classList.add('hidden');
-      showSayThis(result);
+      showSayThisOneLiner(oneLiner);
     }
   }
 
