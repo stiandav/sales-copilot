@@ -372,15 +372,20 @@ var DiagnosisEngine = (function () {
   }
 
   // Detect if prospect is warming up / showing buying signals
+  // Patterns must be specific phrases — bare words like "maybe", "fine", "okay"
+  // appear in objections and cause false positives.
   function detectBuyingSignal(text) {
     if (!text) return false;
     var lower = text.toLowerCase();
     var buyingPatterns = [
-      /i guess|i suppose|couldn't hurt|might be|maybe|possibly|open to/i,
-      /what would that look like|how would that work|tell me more/i,
-      /when (would|could|can) you|what's your schedule|come by/i,
-      /send me|email me|give me your (card|info|number)/i,
-      /okay|alright|sure|fine|let's do it|sounds good|why not/i,
+      /what would that look like|how would that work|tell me more about/i,
+      /when (would|could|can) you (come|stop|swing|drop|visit)|what's your (schedule|availability)/i,
+      /send me (the|your|that|a) (info|report|data|analysis|valuation|details)/i,
+      /email me (the|your|that)|give me your (card|number|info|email)/i,
+      /let's do it|let's set (it|that) up|go ahead and|sounds (good|great|like a plan)/i,
+      /i'm (in|interested|down for)|why not|couldn't hurt|might as well/i,
+      /worth a (shot|try|look)|i suppose (we|i) could/i,
+      /yeah,? (let's|go ahead|set|send|come)|ok(ay)?,? (let's|go ahead|set|send|come)/i,
     ];
     return buyingPatterns.some(function (p) { return p.test(lower); });
   }
