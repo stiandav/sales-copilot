@@ -488,7 +488,7 @@ function initApp() {
       var card = document.createElement('div');
       card.className = 'script-card';
       var leadTags = (s.leadTypes || [])
-        .map(function (lt) { return '<span class="script-card__lead-tag">' + (LEAD_TYPE_LABELS[lt] || lt) + '</span>'; })
+        .map(function (lt) { var labels = typeof LEAD_TYPE_LABELS !== 'undefined' ? LEAD_TYPE_LABELS : {}; return '<span class="script-card__lead-tag">' + (labels[lt] || lt) + '</span>'; })
         .join(' ');
       var topPatterns = s.patterns.slice(0, 5).map(function (p) { return '"' + p + '"'; }).join(', ');
       card.innerHTML =
@@ -559,7 +559,7 @@ function initApp() {
     voiceConversation.innerHTML = '';
     voiceInterim.textContent = '';
     voiceName.textContent = prospect.prospectName;
-    voiceLeadTag.textContent = LEAD_TYPE_LABELS[leadType] || leadType;
+    voiceLeadTag.textContent = (typeof LEAD_TYPE_LABELS !== 'undefined' && LEAD_TYPE_LABELS[leadType]) || leadType;
 
     voiceStartTime = Date.now();
     voiceTimerEl.textContent = '00:00';
@@ -650,7 +650,7 @@ function initApp() {
       summaryStats.innerHTML =
         '<div class="summary-stat"><span class="summary-stat__label">Duration</span><span class="summary-stat__value">' + mins + 'm ' + secs + 's</span></div>' +
         '<div class="summary-stat"><span class="summary-stat__label">Exchanges</span><span class="summary-stat__value">' + summary.turns + '</span></div>' +
-        '<div class="summary-stat"><span class="summary-stat__label">Lead Type</span><span class="summary-stat__value">' + (LEAD_TYPE_LABELS[summary.leadType] || summary.leadType) + '</span></div>' +
+        '<div class="summary-stat"><span class="summary-stat__label">Lead Type</span><span class="summary-stat__value">' + ((typeof LEAD_TYPE_LABELS !== 'undefined' && LEAD_TYPE_LABELS[summary.leadType]) || summary.leadType) + '</span></div>' +
         '<div class="summary-stat"><span class="summary-stat__label">Difficulty</span><span class="summary-stat__value">' + summary.difficulty.charAt(0).toUpperCase() + summary.difficulty.slice(1) + '</span></div>';
     }
   }
