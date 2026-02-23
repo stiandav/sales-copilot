@@ -1250,17 +1250,39 @@ function initApp() {
     setTimeout(function () { profileStatus.textContent = ''; }, 3000);
   });
 
-  // ---- File upload handler ----
+  // ---- File upload handler (PDF, DOCX, RTF, TXT, images) ----
   if (scriptFileInput) scriptFileInput.addEventListener('change', function (e) {
     var file = e.target.files[0];
     if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function (ev) {
-      customScriptsInput.value = ev.target.result;
-      extractStatus.textContent = 'File loaded: ' + file.name;
-      extractStatus.style.color = 'var(--accent-blue)';
-    };
-    reader.readAsText(file);
+
+    extractStatus.textContent = 'Reading ' + file.name + '...';
+    extractStatus.style.color = 'var(--accent-blue)';
+
+    if (typeof FileReaderEngine !== 'undefined') {
+      FileReaderEngine.extractText(file).then(function (result) {
+        if (result.error) {
+          extractStatus.textContent = result.error;
+          extractStatus.style.color = result.isImage ? 'var(--accent-yellow)' : 'var(--accent-red)';
+          if (result.text) customScriptsInput.value = result.text;
+          return;
+        }
+        customScriptsInput.value = result.text;
+        extractStatus.textContent = 'Extracted text from ' + file.name + ' — click Extract Scripts to process.';
+        extractStatus.style.color = 'var(--accent-green)';
+      }).catch(function () {
+        extractStatus.textContent = 'Could not read file. Try copy-pasting the text instead.';
+        extractStatus.style.color = 'var(--accent-red)';
+      });
+    } else {
+      // Fallback: read as plain text
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        customScriptsInput.value = ev.target.result;
+        extractStatus.textContent = 'File loaded: ' + file.name;
+        extractStatus.style.color = 'var(--accent-blue)';
+      };
+      reader.readAsText(file);
+    }
   });
 
   // ---- Extract scripts ----

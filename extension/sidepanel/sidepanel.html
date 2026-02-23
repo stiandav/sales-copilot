@@ -378,7 +378,7 @@
       <div class="setup-section">
         <div class="setup-section__header">
           <h3>Your Scripts</h3>
-          <p class="setup-section__desc">Paste your call scripts, objection handlers, or playbook content. AI automatically extracts and organizes everything.</p>
+          <p class="setup-section__desc">Upload or paste your call scripts, objection handlers, or playbook. Supports PDF, Word (.docx), RTF, text files, and images.</p>
         </div>
 
         <div class="setup-format-hints">
@@ -400,8 +400,8 @@ I get it — most homeowners feel the same way...
         <div class="setup-upload-row">
           <label class="setup-upload-btn">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1v8M3 5l4-4 4 4M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Upload .txt file
-            <input type="file" id="script-file-input" accept=".txt,.text,.csv,.md" hidden>
+            Upload file
+            <input type="file" id="script-file-input" accept=".txt,.text,.csv,.md,.pdf,.docx,.doc,.rtf,.jpg,.jpeg,.png,.gif,.webp,.bmp,.heic,.tiff" hidden>
           </label>
           <button class="btn btn--extract" id="extract-scripts-btn">Extract Scripts</button>
         </div>
@@ -437,6 +437,7 @@ I get it — most homeowners feel the same way...
   <script src="engine/diagnosis-engine.js"></script>
   <script src="engine/prospect-ai.js"></script>
   <script src="engine/script-extractor.js"></script>
+  <script src="engine/file-reader.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>
