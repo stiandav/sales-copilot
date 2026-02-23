@@ -1,4 +1,5 @@
 // SupabaseAuth — lightweight Supabase auth client using REST API.
+// Handles auth, subscription/trial checking, and Stripe checkout redirect.
 // No external library needed. Runs entirely in the Chrome extension.
 
 var SupabaseAuth = (function () {
@@ -8,11 +9,25 @@ var SupabaseAuth = (function () {
   // ============================================================
   var SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
   var SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+
+  // Stripe Payment Links — create these at dashboard.stripe.com
+  // Products > Create Product > Add Price > Create Payment Link
+  var STRIPE_MONTHLY_LINK = 'https://buy.stripe.com/YOUR_MONTHLY_LINK';
+  var STRIPE_ANNUAL_LINK = 'https://buy.stripe.com/YOUR_ANNUAL_LINK';
   // ============================================================
 
   var TOKEN_KEY = 'sb_auth_token';
   var currentUser = null;
   var currentSession = null;
+  var currentSubscription = null;
+
+  // ---- Pricing config (displayed in upgrade UI) ----
+  var PRICING = {
+    trial_days: 7,
+    monthly_price: 79,
+    annual_price: 588,
+    annual_monthly: 49,
+  };
 
   // ---- helpers ----
   function apiUrl(path) {
@@ -42,6 +57,7 @@ var SupabaseAuth = (function () {
   function clearSession() {
     currentSession = null;
     currentUser = null;
+    currentSubscription = null;
     if (typeof chrome !== 'undefined' && chrome.storage) {
       chrome.storage.local.remove(['sb_session']);
     }
@@ -136,12 +152,10 @@ var SupabaseAuth = (function () {
           callback(null, result.data.msg || result.data.error_description || result.data.message || 'Sign up failed');
           return;
         }
-        // Supabase may return a session directly or require email confirmation
         if (result.data.access_token) {
           saveSession(result.data);
           callback(result.data.user, null);
         } else if (result.data.id) {
-          // Email confirmation required
           callback(null, 'confirm_email');
         } else {
           callback(null, 'Unexpected response');
@@ -180,7 +194,6 @@ var SupabaseAuth = (function () {
       return;
     }
 
-    // Build the Supabase OAuth URL
     var redirectUrl = chrome.identity.getRedirectURL();
     var authUrl = SUPABASE_URL + '/auth/v1/authorize?' +
       'provider=google' +
@@ -199,7 +212,6 @@ var SupabaseAuth = (function () {
           return;
         }
 
-        // Extract tokens from the URL hash fragment
         var hashStr = responseUrl.split('#')[1];
         if (!hashStr) {
           callback(null, 'No auth tokens in response');
@@ -213,7 +225,6 @@ var SupabaseAuth = (function () {
         });
 
         if (params.access_token) {
-          // Get user info and build session
           fetch(apiUrl('/auth/v1/user'), {
             method: 'GET',
             headers: headers(params.access_token),
@@ -252,7 +263,7 @@ var SupabaseAuth = (function () {
     if (callback) callback();
   }
 
-  // ---- Check if user's email is whitelisted ----
+  // ---- Check if user's email is whitelisted (manual override) ----
   function checkWhitelist(email, callback) {
     if (!email) { callback(false); return; }
 
@@ -278,6 +289,118 @@ var SupabaseAuth = (function () {
       });
   }
 
+  // ============================================================
+  // SUBSCRIPTION / TRIAL CHECKING
+  // ============================================================
+
+  // Check subscription status for the current user
+  function checkSubscription(callback) {
+    if (!currentSession || !currentSession.access_token) {
+      callback({ status: 'none', allowed: false });
+      return;
+    }
+
+    var url = apiUrl('/rest/v1/subscriptions?user_id=eq.' + currentUser.id + '&select=*&limit=1');
+
+    fetch(url, {
+      method: 'GET',
+      headers: headers(currentSession.access_token),
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Subscription check failed');
+        return res.json();
+      })
+      .then(function (rows) {
+        if (!rows || rows.length === 0) {
+          // No subscription record — brand new user, create trial client-side
+          currentSubscription = {
+            plan: 'trial',
+            status: 'active',
+            trial_start: new Date().toISOString(),
+            trial_end: new Date(Date.now() + PRICING.trial_days * 86400000).toISOString(),
+          };
+          callback(evaluateAccess(currentSubscription));
+          return;
+        }
+
+        currentSubscription = rows[0];
+        callback(evaluateAccess(currentSubscription));
+      })
+      .catch(function () {
+        // If subscription table doesn't exist yet, fall back to whitelist
+        currentSubscription = null;
+        callback({ status: 'error', allowed: false, fallbackToWhitelist: true });
+      });
+  }
+
+  // Evaluate whether user has access based on subscription
+  function evaluateAccess(sub) {
+    var now = new Date();
+
+    // Active paid subscription
+    if (sub.plan !== 'trial' && sub.status === 'active') {
+      // Check if current period hasn't expired
+      if (sub.current_period_end) {
+        var periodEnd = new Date(sub.current_period_end);
+        if (now < periodEnd) {
+          return {
+            status: 'active',
+            plan: sub.plan,
+            allowed: true,
+            periodEnd: periodEnd,
+          };
+        }
+        // Period expired — check with server on next load
+        return { status: 'expired', plan: sub.plan, allowed: false };
+      }
+      return { status: 'active', plan: sub.plan, allowed: true };
+    }
+
+    // Trial
+    if (sub.plan === 'trial') {
+      var trialEnd = new Date(sub.trial_end);
+      var daysLeft = Math.ceil((trialEnd - now) / 86400000);
+
+      if (now < trialEnd) {
+        return {
+          status: 'trial',
+          allowed: true,
+          daysLeft: Math.max(0, daysLeft),
+          trialEnd: trialEnd,
+        };
+      }
+      // Trial expired
+      return { status: 'trial_expired', allowed: false, daysLeft: 0 };
+    }
+
+    // Canceled or past_due
+    if (sub.status === 'canceled' || sub.status === 'past_due' || sub.status === 'expired') {
+      return { status: sub.status, plan: sub.plan, allowed: false };
+    }
+
+    return { status: 'unknown', allowed: false };
+  }
+
+  // ============================================================
+  // STRIPE CHECKOUT
+  // ============================================================
+
+  // Open Stripe Payment Link with user's email pre-filled
+  function openCheckout(plan) {
+    var email = currentUser ? (currentUser.email || '') : '';
+    var link = plan === 'annual' ? STRIPE_ANNUAL_LINK : STRIPE_MONTHLY_LINK;
+    // Append email as prefilled parameter
+    var separator = link.indexOf('?') === -1 ? '?' : '&';
+    var checkoutUrl = link + separator + 'prefilled_email=' + encodeURIComponent(email);
+
+    // Open in new tab
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: checkoutUrl });
+    } else {
+      window.open(checkoutUrl, '_blank');
+    }
+  }
+
   // ---- Check if configured ----
   function isConfigured() {
     return SUPABASE_URL.indexOf('YOUR_PROJECT') === -1 && SUPABASE_ANON_KEY.indexOf('YOUR_ANON') === -1;
@@ -289,10 +412,14 @@ var SupabaseAuth = (function () {
     signInWithGoogle: signInWithGoogle,
     signOut: signOut,
     checkWhitelist: checkWhitelist,
+    checkSubscription: checkSubscription,
+    openCheckout: openCheckout,
     loadSession: loadSession,
     isConfigured: isConfigured,
     getUser: function () { return currentUser; },
     getSession: function () { return currentSession; },
+    getSubscription: function () { return currentSubscription; },
     getSupabaseUrl: function () { return SUPABASE_URL; },
+    PRICING: PRICING,
   };
 })();

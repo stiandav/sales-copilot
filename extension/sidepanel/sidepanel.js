@@ -65,32 +65,93 @@
     showStatus('', '');
   });
 
-  // ---- After auth succeeds, check whitelist then show app ----
+  // ---- After auth succeeds, check subscription/trial then show app ----
   function handleAuthSuccess(user) {
     var email = user.email || (user.user_metadata && user.user_metadata.email) || '';
     showStatus('Checking access...', 'var(--accent-blue)');
 
-    SupabaseAuth.checkWhitelist(email, function (allowed, row) {
-      if (allowed) {
-        // Access granted
-        authGate.classList.add('hidden');
-        appMain.classList.remove('hidden');
-        if (headerUser) headerUser.textContent = email;
-        showStatus('', '');
-        initApp();
+    // First check subscription/trial status
+    SupabaseAuth.checkSubscription(function (access) {
+
+      // If subscription table doesn't exist yet, fall back to whitelist
+      if (access.fallbackToWhitelist) {
+        SupabaseAuth.checkWhitelist(email, function (allowed, row) {
+          if (allowed) {
+            grantAccess(email, null);
+          } else {
+            showPaywall();
+          }
+        });
+        return;
+      }
+
+      if (access.allowed) {
+        grantAccess(email, access);
       } else {
-        // Not whitelisted
-        showStatus('', '');
-        loginForm.classList.add('hidden');
-        signupForm.classList.add('hidden');
-        authToggle.classList.add('hidden');
-        authConfirmMsg.classList.add('hidden');
-        if (btnGoogle) btnGoogle.classList.add('hidden');
-        var divider = document.querySelector('.auth-divider');
-        if (divider) divider.classList.add('hidden');
-        authBlocked.classList.remove('hidden');
+        // Not allowed — check whitelist as a manual override
+        SupabaseAuth.checkWhitelist(email, function (whitelisted) {
+          if (whitelisted) {
+            grantAccess(email, { status: 'whitelisted', allowed: true });
+          } else {
+            showPaywall(access);
+          }
+        });
       }
     });
+  }
+
+  function grantAccess(email, access) {
+    authGate.classList.add('hidden');
+    appMain.classList.remove('hidden');
+    if (headerUser) headerUser.textContent = email;
+    showStatus('', '');
+
+    // Show trial badge in header if on trial
+    var trialBadge = document.getElementById('trial-badge');
+    if (trialBadge && access && access.status === 'trial') {
+      trialBadge.textContent = access.daysLeft + 'd left';
+      trialBadge.classList.remove('hidden');
+    } else if (trialBadge) {
+      trialBadge.classList.add('hidden');
+    }
+
+    initApp();
+  }
+
+  function showPaywall(access) {
+    showStatus('', '');
+    loginForm.classList.add('hidden');
+    signupForm.classList.add('hidden');
+    authToggle.classList.add('hidden');
+    authConfirmMsg.classList.add('hidden');
+    if (btnGoogle) btnGoogle.classList.add('hidden');
+    var divider = document.querySelector('.auth-divider');
+    if (divider) divider.classList.add('hidden');
+    authBlocked.classList.add('hidden');
+
+    // Show upgrade screen
+    var upgradeScreen = document.getElementById('upgrade-screen');
+    if (upgradeScreen) {
+      var pricing = SupabaseAuth.PRICING;
+      var title = upgradeScreen.querySelector('.upgrade__title');
+      var subtitle = upgradeScreen.querySelector('.upgrade__subtitle');
+
+      if (access && access.status === 'trial_expired') {
+        if (title) title.textContent = 'Your free trial has ended';
+        if (subtitle) subtitle.textContent = 'Subscribe to keep using Cold Call AI and book more appointments.';
+      } else if (access && access.status === 'canceled') {
+        if (title) title.textContent = 'Subscription canceled';
+        if (subtitle) subtitle.textContent = 'Resubscribe to continue using Cold Call AI.';
+      } else if (access && access.status === 'past_due') {
+        if (title) title.textContent = 'Payment failed';
+        if (subtitle) subtitle.textContent = 'Update your payment method to continue.';
+      } else {
+        if (title) title.textContent = 'Subscribe to Cold Call AI';
+        if (subtitle) subtitle.textContent = 'Start closing more listing appointments today.';
+      }
+
+      upgradeScreen.classList.remove('hidden');
+    }
   }
 
   // ---- Email login ----
@@ -144,19 +205,46 @@
     });
   });
 
+  // ---- Reset auth gate to login form ----
+  function resetToLoginForm() {
+    authBlocked.classList.add('hidden');
+    var upgradeScreen = document.getElementById('upgrade-screen');
+    if (upgradeScreen) upgradeScreen.classList.add('hidden');
+    authToggle.classList.remove('hidden');
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+    if (btnGoogle) btnGoogle.classList.remove('hidden');
+    var divider = document.querySelector('.auth-divider');
+    if (divider) divider.classList.remove('hidden');
+    authTabLogin.classList.add('auth-toggle__btn--active');
+    authTabSignup.classList.remove('auth-toggle__btn--active');
+  }
+
   // ---- Sign out (from blocked screen) ----
   if (btnAuthLogout) btnAuthLogout.addEventListener('click', function () {
     SupabaseAuth.signOut(function () {
-      authBlocked.classList.add('hidden');
-      authToggle.classList.remove('hidden');
-      loginForm.classList.remove('hidden');
-      if (btnGoogle) btnGoogle.classList.remove('hidden');
-      var divider = document.querySelector('.auth-divider');
-      if (divider) divider.classList.remove('hidden');
-      authTabLogin.classList.add('auth-toggle__btn--active');
-      authTabSignup.classList.remove('auth-toggle__btn--active');
+      resetToLoginForm();
       showStatus('', '');
     });
+  });
+
+  // ---- Sign out (from upgrade screen) ----
+  var btnUpgradeLogout = document.getElementById('btn-upgrade-logout');
+  if (btnUpgradeLogout) btnUpgradeLogout.addEventListener('click', function () {
+    SupabaseAuth.signOut(function () {
+      resetToLoginForm();
+      showStatus('Signed out.', 'var(--text-dim)');
+    });
+  });
+
+  // ---- Upgrade buttons ----
+  var btnUpgradeMonthly = document.getElementById('btn-upgrade-monthly');
+  var btnUpgradeAnnual = document.getElementById('btn-upgrade-annual');
+  if (btnUpgradeMonthly) btnUpgradeMonthly.addEventListener('click', function () {
+    SupabaseAuth.openCheckout('monthly');
+  });
+  if (btnUpgradeAnnual) btnUpgradeAnnual.addEventListener('click', function () {
+    SupabaseAuth.openCheckout('annual');
   });
 
   // ---- Sign out (from header) ----
@@ -164,12 +252,7 @@
     SupabaseAuth.signOut(function () {
       appMain.classList.add('hidden');
       authGate.classList.remove('hidden');
-      authBlocked.classList.add('hidden');
-      authToggle.classList.remove('hidden');
-      loginForm.classList.remove('hidden');
-      if (btnGoogle) btnGoogle.classList.remove('hidden');
-      var divider = document.querySelector('.auth-divider');
-      if (divider) divider.classList.remove('hidden');
+      resetToLoginForm();
       showStatus('Signed out.', 'var(--text-dim)');
     });
   });
