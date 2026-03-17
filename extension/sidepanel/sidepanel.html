@@ -97,10 +97,39 @@
           <div class="upgrade__feature">Voice practice with AI prospects</div>
           <div class="upgrade__feature">Custom script upload (PDF, DOCX, images)</div>
           <div class="upgrade__feature">All lead types (Expired, FSBO, FRBO, Pre-Foreclosure)</div>
+          <div class="upgrade__feature">Personalized to your market area and value proposition</div>
         </div>
 
         <button class="btn btn--auth-secondary" id="btn-upgrade-logout">Sign out</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== ONBOARDING (shown on first run) ==================== -->
+  <div class="onboarding hidden" id="onboarding-screen">
+    <div class="onboarding__card">
+      <h2 class="onboarding__title">Welcome to Cold Call AI</h2>
+      <p class="onboarding__subtitle">Quick setup — personalize your scripts in 30 seconds.</p>
+
+      <div class="setup-field">
+        <label class="setup-field__label" for="onboard-name">Your Name *</label>
+        <input type="text" class="setup-field__input" id="onboard-name" placeholder="e.g. Sarah Johnson" autocomplete="off">
+      </div>
+      <div class="setup-field">
+        <label class="setup-field__label" for="onboard-area">Your Market Area *</label>
+        <input type="text" class="setup-field__input" id="onboard-area" placeholder="e.g. Orange County, Austin TX, Denver Metro" autocomplete="off">
+      </div>
+      <div class="setup-field">
+        <label class="setup-field__label" for="onboard-team">Team / Brokerage (optional)</label>
+        <input type="text" class="setup-field__input" id="onboard-team" placeholder="e.g. Johnson Real Estate Group" autocomplete="off">
+      </div>
+      <div class="setup-field">
+        <label class="setup-field__label" for="onboard-vp">What makes you different? (optional)</label>
+        <textarea class="setup-field__textarea" id="onboard-vp" rows="2" placeholder="e.g. 15 years experience, $10K/month in marketing, 200+ homes sold"></textarea>
+      </div>
+
+      <div class="onboarding__error hidden" id="onboard-error">Please fill in your name and market area.</div>
+      <button class="btn btn--auth-primary" id="onboard-save">Start Coaching</button>
     </div>
   </div>
 
@@ -392,7 +421,7 @@
 
         <div class="setup-field">
           <label class="setup-field__label" for="agent-area">Market Area</label>
-          <input type="text" class="setup-field__input" id="agent-area" placeholder="e.g. San Diego County" value="San Diego County" autocomplete="off">
+          <input type="text" class="setup-field__input" id="agent-area" placeholder="e.g. Orange County, Austin TX, Denver Metro" autocomplete="off">
         </div>
 
         <div class="setup-field">
@@ -402,7 +431,7 @@
 
         <div class="setup-field">
           <label class="setup-field__label" for="agent-value-prop">What makes you different? (your value prop)</label>
-          <textarea class="setup-field__textarea" id="agent-value-prop" rows="3" placeholder="e.g. Our team invests $30k/month in marketing, we have a dedicated listing specialist, 200+ homes sold in San Diego..."></textarea>
+          <textarea class="setup-field__textarea" id="agent-value-prop" rows="3" placeholder="e.g. 15 years experience, $10K/month in marketing, 200+ homes sold, dedicated listing specialist..."></textarea>
         </div>
 
         <button class="btn btn--setup-save" id="save-profile-btn">Save Profile</button>

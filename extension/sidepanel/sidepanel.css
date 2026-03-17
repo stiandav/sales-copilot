@@ -2180,3 +2180,37 @@ body {
   max-height: 200px;
   overflow-y: auto;
 }
+
+/* ==================== ONBOARDING ==================== */
+.onboarding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px 16px;
+}
+.onboarding__card {
+  width: 100%;
+  max-width: 340px;
+}
+.onboarding__title {
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.onboarding__subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.onboarding .setup-field {
+  margin-bottom: 12px;
+}
+.onboarding__error {
+  color: var(--accent-red);
+  font-size: 12px;
+  margin-bottom: 8px;
+  text-align: center;
+}

@@ -305,7 +305,7 @@ function initApp() {
   };
 
   // ---- Agent Profile + Custom Scripts state ----
-  var agentProfile = { name: '', team: '', area: 'San Diego County', calendarLink: '', valueProp: '' };
+  var agentProfile = { name: '', team: '', area: '', calendarLink: '', valueProp: '' };
   var customScripts = []; // Array of {label, category, objection, script, source}
 
   // ==================== MODE SWITCHING ====================
@@ -430,7 +430,7 @@ function initApp() {
           '<span class="copilot__option-name">' + esc(opt.label) + '</span>' +
           (idx === 0 ? '<span class="copilot__option-badge">Recommended</span>' : '') +
         '</div>' +
-        '<div class="copilot__option-script">' + esc(opt.script) + '</div>' +
+        '<div class="copilot__option-script">' + esc(personalizeScript(opt.script)) + '</div>' +
         '<div class="copilot__option-why"><span class="why-label">Why:</span> ' + esc(opt.why) + '</div>';
 
       // Click to expand/select
@@ -469,7 +469,7 @@ function initApp() {
         aEl.className = 'copilot__bc-angle';
         aEl.innerHTML =
           '<div class="copilot__bc-angle-title">' + esc(angle.title) + '</div>' +
-          '<div class="copilot__bc-angle-text">' + esc(angle.text) + '</div>';
+          '<div class="copilot__bc-angle-text">' + esc(personalizeScript(angle.text)) + '</div>';
         bcEl.appendChild(aEl);
       });
 
@@ -497,7 +497,7 @@ function initApp() {
           leadTags +
         '</div>' +
         '<div class="script-card__patterns">Triggers: ' + esc(topPatterns) + '</div>' +
-        '<div class="script-card__body">' + esc(s.script) + '</div>';
+        '<div class="script-card__body">' + esc(personalizeScript(s.script)) + '</div>';
       scriptLibrary.appendChild(card);
     });
   }
@@ -589,7 +589,7 @@ function initApp() {
     var match = engine.detect(text);
     if (match) {
       voiceCoach.classList.remove('hidden');
-      voiceCoachScript.textContent = match.script.script;
+      voiceCoachScript.textContent = personalizeScript(match.script.script);
       voiceCoach.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -908,7 +908,7 @@ function initApp() {
 
   function handleQuickTap(tap) {
     // Live mode: show one-liner response directly, no diagnosis
-    showSayThisOneLiner(tap.response || tap.text);
+    showSayThisOneLiner(personalizeScript(tap.response || tap.text));
     openingCard.classList.add('hidden');
     closeCard.classList.add('hidden');
   }
@@ -956,7 +956,7 @@ function initApp() {
 
     // Require at least 2 keyword matches
     if (bestScore >= 2 && bestTap && bestTap.response) {
-      return bestTap.response;
+      return personalizeScript(bestTap.response);
     }
     return null;
   }
@@ -997,7 +997,7 @@ function initApp() {
   // Legacy showSayThis kept for any edge cases — now simplified
   function showSayThis(result) {
     if (!result || !result.options || result.options.length === 0) return;
-    showSayThisOneLiner(result.options[0].script);
+    showSayThisOneLiner(personalizeScript(result.options[0].script));
   }
 
   function flashSayThis() {
@@ -1017,7 +1017,7 @@ function initApp() {
   function showCloseScript(index) {
     var close = DiagnosisEngine.getCloseScript(index);
     if (!close) return;
-    closeScriptEl.textContent = close.script;
+    closeScriptEl.textContent = personalizeScript(close.script);
     closeCard.classList.remove('hidden');
     sayThis.classList.add('hidden');
     openingCard.classList.add('hidden');
@@ -1304,7 +1304,7 @@ function initApp() {
           agentProfile = data.agentProfile;
           if (agentNameInput) agentNameInput.value = agentProfile.name || '';
           if (agentTeamInput) agentTeamInput.value = agentProfile.team || '';
-          if (agentAreaInput) agentAreaInput.value = agentProfile.area || 'San Diego County';
+          if (agentAreaInput) agentAreaInput.value = agentProfile.area || '';
           if (agentCalendarInput) agentCalendarInput.value = agentProfile.calendarLink || '';
           if (agentValuePropInput) agentValuePropInput.value = agentProfile.valueProp || '';
         }
@@ -1313,15 +1313,58 @@ function initApp() {
           buildQuickTapGrid(); // Rebuild with custom scripts included
         }
         renderSavedScripts();
+        checkOnboarding();
       });
     }
+  }
+
+  // ---- First-run onboarding ----
+  function checkOnboarding() {
+    if (agentProfile.name && agentProfile.area) return; // already set up
+    var screen = document.getElementById('onboarding-screen');
+    var appMain = document.getElementById('app-main');
+    if (!screen) return;
+    screen.classList.remove('hidden');
+    if (appMain) appMain.classList.add('hidden');
+
+    var saveBtn = document.getElementById('onboard-save');
+    var errorEl = document.getElementById('onboard-error');
+    if (saveBtn) saveBtn.addEventListener('click', function () {
+      var name = (document.getElementById('onboard-name').value || '').trim();
+      var area = (document.getElementById('onboard-area').value || '').trim();
+      var team = (document.getElementById('onboard-team').value || '').trim();
+      var vp = (document.getElementById('onboard-vp').value || '').trim();
+
+      if (!name || !area) {
+        if (errorEl) errorEl.classList.remove('hidden');
+        return;
+      }
+
+      agentProfile.name = name;
+      agentProfile.area = area;
+      agentProfile.team = team;
+      agentProfile.valueProp = vp;
+
+      // Sync to setup tab inputs
+      if (agentNameInput) agentNameInput.value = name;
+      if (agentAreaInput) agentAreaInput.value = area;
+      if (agentTeamInput) agentTeamInput.value = team;
+      if (agentValuePropInput) agentValuePropInput.value = vp;
+
+      if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.local.set({ agentProfile: agentProfile });
+      }
+
+      screen.classList.add('hidden');
+      if (appMain) appMain.classList.remove('hidden');
+    });
   }
 
   // ---- Save profile ----
   if (saveProfileBtn) saveProfileBtn.addEventListener('click', function () {
     agentProfile.name = (agentNameInput.value || '').trim();
     agentProfile.team = (agentTeamInput.value || '').trim();
-    agentProfile.area = (agentAreaInput.value || '').trim() || 'San Diego County';
+    agentProfile.area = (agentAreaInput.value || '').trim();
     agentProfile.calendarLink = (agentCalendarInput.value || '').trim();
     agentProfile.valueProp = (agentValuePropInput.value || '').trim();
 
@@ -1527,18 +1570,49 @@ function initApp() {
   function personalizeScript(text) {
     if (!text) return text;
     var result = text;
+
+    // Name
     if (agentProfile.name) {
       result = result.replace(/my name is ___/gi, 'my name is ' + agentProfile.name);
       result = result.replace(/I'm ___/g, "I'm " + agentProfile.name);
     }
+
+    // Team
     if (agentProfile.team) {
       result = result.replace(/a real estate team/gi, agentProfile.team);
       result = result.replace(/our team/gi, agentProfile.team);
     }
-    if (agentProfile.area && agentProfile.area !== 'San Diego County') {
-      result = result.replace(/San Diego County/g, agentProfile.area);
-      result = result.replace(/San Diego/g, agentProfile.area.replace(/ County$/, ''));
+
+    // Area
+    var area = agentProfile.area;
+    if (area) {
+      result = result.replace(/San Diego County/g, area);
+      result = result.replace(/San Diego/g, area.replace(/ County$/, ''));
+    } else {
+      result = result.replace(/in San Diego County/g, 'in your area');
+      result = result.replace(/San Diego County/g, 'your area');
+      result = result.replace(/in San Diego/g, 'in your area');
+      result = result.replace(/San Diego/g, 'your local');
     }
+
+    // Marketing budget claims → generic or agent's value prop
+    var vp = agentProfile.valueProp;
+    result = result.replace(/our team invests over \$30,000 a month in marketing/gi, 'we invest heavily in marketing');
+    result = result.replace(/we invest \$30,000\/month[^.]*/gi, 'we invest heavily in marketing');
+    result = result.replace(/we spend \$30,000 a month[^.]*/gi, 'we invest heavily in marketing');
+    result = result.replace(/spends? over? ?\$30,?000 a month[^.]*/gi, 'invest heavily in marketing');
+    result = result.replace(/\$30,?000 a month in marketing[^.]*/gi, 'significant investment in marketing');
+    result = result.replace(/\$30,?000\/month[^.]*/gi, 'significant marketing investment');
+    result = result.replace(/\$30K\/month[^.]*/gi, 'significant marketing investment');
+    result = result.replace(/\$30,?000[^.]* marketing/gi, 'significant marketing resources');
+    result = result.replace(/\$30K[^.]* marketing/gi, 'significant marketing resources');
+
+    // Experience claims → generic
+    result = result.replace(/37 years of experience[^.]*/gi, 'years of local experience');
+    result = result.replace(/37 years in [^.]*/gi, 'years of experience in local real estate');
+    result = result.replace(/for 37 years/gi, 'for years');
+    result = result.replace(/37 years/gi, 'years of experience');
+
     return result;
   }
 

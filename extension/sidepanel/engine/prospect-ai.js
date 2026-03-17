@@ -107,7 +107,7 @@ class ProspectAI {
     }
 
     // If agent mentions team experience / marketing budget
-    if (/37 years|thirty.?seven|30.?000|thirty thousand|marketing/.test(lower)) {
+    if (/\d+ years|experience|thirty.?seven|30.?000|thirty thousand|marketing|invest/.test(lower)) {
       return this._pickRandom([
         "That's impressive, but every agent says they're the best. What makes you different?",
         "Okay, so you spend a lot on marketing. What does that actually mean for my home?",

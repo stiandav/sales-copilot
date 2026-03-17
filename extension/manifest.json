@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Cold Call AI Assistant",
   "version": "1.0.0",
-  "description": "Real-time AI cold calling coach for real estate sales reps",
+  "description": "Real-time AI cold calling coach for real estate agents. Hear objections, see what to say. Practice mode, voice roleplay, and live call coaching for any US market.",
   "permissions": [
     "tabCapture",
     "activeTab",
