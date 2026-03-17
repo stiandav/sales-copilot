@@ -1,7 +1,4 @@
 {
   "name": "sales-copilot",
-  "private": true,
-  "scripts": {
-    "test": "node extension/tests/check-personalization.js"
-  }
+  "private": true
 }

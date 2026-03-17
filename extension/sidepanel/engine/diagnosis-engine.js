@@ -77,9 +77,9 @@ var DiagnosisEngine = (function () {
       trigger: /zillow/i,
       competitor: 'Zillow',
       angles: [
-        { title: 'Zestimate Accuracy', text: 'Zillow\'s Zestimate has a median error of 6.9% — on a $800K San Diego home, that\'s $55,000 off. Our CMAs use actual closed sales, not algorithms.' },
-        { title: 'Exposure Gap', text: 'Zillow listings get views but not qualified buyers. Our $30K/month marketing targets active, pre-approved buyers in your price range.' },
-        { title: 'Negotiation', text: 'Zillow can\'t negotiate for you. Our team has 37 years of experience getting top dollar at the negotiating table.' },
+        { title: 'Zestimate Accuracy', text: 'Zillow\'s Zestimate has a median error of 6.9% — on a typical home, that can be tens of thousands off. Our CMAs use actual closed sales, not algorithms.' },
+        { title: 'Exposure Gap', text: 'Zillow listings get views but not qualified buyers. Our marketing targets active, pre-approved buyers in your price range.' },
+        { title: 'Negotiation', text: 'Zillow can\'t negotiate for you. Our team has years of experience getting top dollar at the negotiating table.' },
       ],
     },
     {
@@ -87,8 +87,8 @@ var DiagnosisEngine = (function () {
       competitor: 'Redfin',
       angles: [
         { title: 'Discount = Discount Service', text: 'Redfin agents handle 3x more listings — that means less attention on your home. Our listing specialist is dedicated to your property.' },
-        { title: 'Local Expertise', text: 'Redfin assigns agents by availability, not neighborhood. We specialize in San Diego County — your specific streets, schools, and buyer pool.' },
-        { title: 'Marketing Investment', text: 'Redfin saves on marketing. We invest $30,000/month in targeted campaigns, professional photography, and staging.' },
+        { title: 'Local Expertise', text: 'Redfin assigns agents by availability, not neighborhood. We specialize in your area — your specific streets, schools, and buyer pool.' },
+        { title: 'Marketing Investment', text: 'Redfin saves on marketing. We invest heavily in targeted campaigns, professional photography, and staging.' },
       ],
     },
     {
@@ -97,7 +97,7 @@ var DiagnosisEngine = (function () {
       angles: [
         { title: 'Net Proceeds', text: 'iBuyers offer 10-15% below market to cover their profit margin. Our clients typically net significantly more even after commission.' },
         { title: 'Hidden Fees', text: 'Cash offers come with service fees of 5-8% PLUS repair deductions they control. It\'s often a worse deal than a traditional sale.' },
-        { title: 'Market Conditions', text: 'In San Diego\'s low-inventory market, open market sales with competition drive prices UP. An instant offer skips that entirely.' },
+        { title: 'Market Conditions', text: 'In a low-inventory market, open market sales with competition drive prices UP. An instant offer skips that entirely.' },
       ],
     },
     {
@@ -105,8 +105,8 @@ var DiagnosisEngine = (function () {
       competitor: 'Their Current Agent',
       angles: [
         { title: 'Second Opinion', text: 'Getting a second pricing opinion is smart — it either confirms their price or reveals an opportunity. Either way, you win.' },
-        { title: 'Marketing Difference', text: 'Ask what their agent\'s marketing plan is. Our team invests $30K/month and has a dedicated listing specialist. Not all agents offer that.' },
-        { title: 'Track Record', text: '37 years in San Diego real estate. We can show you exactly how our listings perform — average days on market, list-to-sale ratio, everything.' },
+        { title: 'Marketing Difference', text: 'Ask what their agent\'s marketing plan is. Our team invests heavily in marketing and has a dedicated listing specialist. Not all agents offer that.' },
+        { title: 'Track Record', text: 'Years of local real estate experience. We can show you exactly how our listings perform — average days on market, list-to-sale ratio, everything.' },
       ],
     },
     {
@@ -115,7 +115,7 @@ var DiagnosisEngine = (function () {
       angles: [
         { title: 'Price Gap', text: 'NAR data shows FSBO homes sell for a median of $100K less than agent-listed homes. The commission pays for itself and then some.' },
         { title: 'Liability Risk', text: 'Real estate contracts in California have major legal exposure. One disclosure mistake can cost tens of thousands in a lawsuit.' },
-        { title: 'Buyer Pool', text: 'FSBO listings only reach a fraction of buyers. Our MLS listing + $30K marketing reach every qualified buyer in the market.' },
+        { title: 'Buyer Pool', text: 'FSBO listings only reach a fraction of buyers. Our MLS listing plus targeted marketing reach every qualified buyer in the market.' },
       ],
     },
   ];
@@ -128,7 +128,7 @@ var DiagnosisEngine = (function () {
       options: [
         {
           label: 'Anchor to Market Data',
-          script: 'I totally understand the timing. Here\'s what I\'d want you to know though — San Diego inventory is at historic lows right now and your home\'s value may be at its peak. What if I sent you a quick market snapshot so you can track it? That way when the timing is right, you\'ll have real data to work with.',
+          script: 'I totally understand the timing. Here\'s what I\'d want you to know though — local inventory is at historic lows right now and your home\'s value may be at its peak. What if I sent you a quick market snapshot so you can track it? That way when the timing is right, you\'ll have real data to work with.',
           why: 'Creates urgency without pressure. Positions you as an advisor, not a salesperson.',
         },
         {
@@ -168,12 +168,12 @@ var DiagnosisEngine = (function () {
       options: [
         {
           label: 'Net Proceeds Reframe',
-          script: 'That\'s a smart question and I\'m glad you brought it up. Here\'s the math: agent-listed homes in San Diego sell for an average of 15-20% more than FSBO. On your home, that difference likely covers our fee several times over. What if I ran the actual numbers for your property so you can see the comparison?',
+          script: 'That\'s a smart question and I\'m glad you brought it up. Here\'s the math: agent-listed homes sell for an average of 15-20% more than FSBO. On your home, that difference likely covers our fee several times over. What if I ran the actual numbers for your property so you can see the comparison?',
           why: 'Shifts the conversation from cost to net outcome. Data beats emotion.',
         },
         {
           label: 'Marketing Value Breakdown',
-          script: 'I understand wanting to keep costs down — that\'s good business sense. Here\'s what our fee covers: $30,000 a month in marketing, professional photography, staging consultation, a dedicated listing specialist, and access to our network of qualified buyers. What would it cost you to replicate that on your own?',
+          script: 'I understand wanting to keep costs down — that\'s good business sense. Here\'s what our fee covers: significant marketing investment, professional photography, staging consultation, a dedicated listing specialist, and access to our network of qualified buyers. What would it cost you to replicate that on your own?',
           why: 'Makes the fee tangible by showing what it buys.',
         },
         {
@@ -188,7 +188,7 @@ var DiagnosisEngine = (function () {
       options: [
         {
           label: 'Differentiate on Service',
-          script: 'I think it\'s smart that you\'re comparing options — that\'s exactly what a savvy homeowner should do. What I\'d ask is this: when you compare, look at the actual marketing plan, the team behind it, and the track record in your specific neighborhood. We\'ve been doing this in San Diego for 37 years. Want me to send over our approach side by side?',
+          script: 'I think it\'s smart that you\'re comparing options — that\'s exactly what a savvy homeowner should do. What I\'d ask is this: when you compare, look at the actual marketing plan, the team behind it, and the track record in your specific neighborhood. We\'ve been doing this in your local market for years. Want me to send over our approach side by side?',
           why: 'Encourages comparison without being defensive. Confidence sells.',
         },
         {
@@ -238,7 +238,7 @@ var DiagnosisEngine = (function () {
         },
         {
           label: 'Educate + Build Trust',
-          script: 'I\'m glad you asked that. With 37 years in San Diego real estate, here\'s what I can tell you: [address question]. What other questions do you have? I\'d rather you have all the information you need to make a confident decision.',
+          script: 'I\'m glad you asked that. With years of local real estate experience, here\'s what I can tell you: [address question]. What other questions do you have? I\'d rather you have all the information you need to make a confident decision.',
           why: 'Positions you as an educator/advisor. Ask for more questions to deepen engagement.',
         },
       ],
@@ -248,7 +248,7 @@ var DiagnosisEngine = (function () {
       options: [
         {
           label: 'Acknowledge + Diagnose',
-          script: 'That sounds really frustrating, and I\'m sorry you went through that. I\'m not going to badmouth your previous agent, but I can tell you there are really only three reasons a home doesn\'t sell: price, condition, or marketing. Our team invests $30,000 a month in marketing and we have a dedicated listing specialist. Would you be open to hearing what we\'d do differently?',
+          script: 'That sounds really frustrating, and I\'m sorry you went through that. I\'m not going to badmouth your previous agent, but I can tell you there are really only three reasons a home doesn\'t sell: price, condition, or marketing. Our team invests heavily in marketing and we have a dedicated listing specialist. Would you be open to hearing what we\'d do differently?',
           why: 'Validates their experience, then provides a framework that implies a fixable problem.',
         },
         {
@@ -263,12 +263,12 @@ var DiagnosisEngine = (function () {
       options: [
         {
           label: 'Compassion + Options',
-          script: 'I appreciate you sharing that with me, and I want you to know I\'m reaching out to help, not to pressure you. The good news is San Diego property values have gone up significantly — you likely have more equity than you think. Would it help to have a confidential conversation about your options? Sometimes just knowing the numbers takes a lot of the stress away.',
+          script: 'I appreciate you sharing that with me, and I want you to know I\'m reaching out to help, not to pressure you. The good news is local property values have gone up significantly — you likely have more equity than you think. Would it help to have a confidential conversation about your options? Sometimes just knowing the numbers takes a lot of the stress away.',
           why: 'Empathy first. The equity revelation is genuinely helpful and creates hope.',
         },
         {
           label: 'Urgency Without Pressure',
-          script: 'I completely understand, and I\'ve helped several families in similar situations in San Diego County. The most important thing is that you have options — and the sooner you know what they are, the more options you\'ll have. Can I put together a confidential property valuation? Everything stays between us.',
+          script: 'I completely understand, and I\'ve helped several families in similar situations in your area. The most important thing is that you have options — and the sooner you know what they are, the more options you\'ll have. Can I put together a confidential property valuation? Everything stays between us.',
           why: 'Creates productive urgency while maintaining trust and confidentiality.',
         },
       ],
@@ -283,7 +283,7 @@ var DiagnosisEngine = (function () {
         },
         {
           label: 'Plant the Seed',
-          script: 'That makes sense, and a lot of FSBO sellers in San Diego feel the same way. Here\'s a quick stat though: NAR data shows agent-listed homes sell for significantly more on average, even after commission. Give it a shot on your own — I\'m rooting for you. But if you hit a wall or want to compare notes, I\'m here.',
+          script: 'That makes sense, and a lot of FSBO sellers feel the same way. Here\'s a quick stat though: NAR data shows agent-listed homes sell for significantly more on average, even after commission. Give it a shot on your own — I\'m rooting for you. But if you hit a wall or want to compare notes, I\'m here.',
           why: 'Non-threatening, supportive. Plants the seed that they may need you later.',
         },
       ],

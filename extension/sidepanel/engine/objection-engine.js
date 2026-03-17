@@ -90,7 +90,7 @@ class ObjectionEngine {
         id: 'bridge-question',
         category: 'BRIDGE',
         label: 'Prospect Question',
-        script: "That's a great question — and I appreciate you asking. Here's what I can tell you: our team has been working this San Diego market for 37 years, and we invest over $30,000 a month in marketing to get our listings maximum exposure. But rather than just talk about it, what if I put together a custom report for your specific property? That way you can see real numbers and make the best decision for your situation. Would that be helpful?"
+        script: "That's a great question — and I appreciate you asking. Here's what I can tell you: our team has deep experience in your local market, and we invest heavily in marketing to get our listings maximum exposure. But rather than just talk about it, what if I put together a custom report for your specific property? That way you can see real numbers and make the best decision for your situation. Would that be helpful?"
       };
     }
 
@@ -108,7 +108,7 @@ class ObjectionEngine {
         id: 'bridge-negative',
         category: 'BRIDGE',
         label: 'Resistant',
-        script: "I completely respect that, and the last thing I want is to waste your time. I'm not your typical agent making a cold call — our team has 37 years of experience right here in San Diego County, and we spend $30,000 a month on marketing because we're serious about getting results. Would it be fair if I just sent you a quick home valuation? If the number doesn't excite you, I promise I won't bug you again."
+        script: "I completely respect that, and the last thing I want is to waste your time. I'm not your typical agent making a cold call — our team has years of experience right here in your area, and we invest heavily in marketing because we're serious about getting results. Would it be fair if I just sent you a quick home valuation? If the number doesn't excite you, I promise I won't bug you again."
       };
     }
 
@@ -117,7 +117,7 @@ class ObjectionEngine {
       id: 'bridge-universal',
       category: 'BRIDGE',
       label: 'General Response',
-      script: "I hear you — and I appreciate your honesty. Let me ask you this: if I could show you, with real data, exactly what your San Diego home would sell for in today's market — and if that number made sense for your family — would you be open to at least having that conversation? I'm not asking for a commitment, just 5 minutes and some real numbers. Our team has 37 years of experience and we invest $30,000 a month in marketing to make sure our clients get top dollar. What do you think?"
+      script: "I hear you — and I appreciate your honesty. Let me ask you this: if I could show you, with real data, exactly what your home would sell for in today's market — and if that number made sense for your family — would you be open to at least having that conversation? I'm not asking for a commitment, just 5 minutes and some real numbers. Our team has deep local experience and we invest heavily in marketing to make sure our clients get top dollar. What do you think?"
     };
   }
 

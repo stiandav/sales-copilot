@@ -11,7 +11,7 @@ const SCRIPTS_DB = [
       "not for me", "pass on that", "i'll pass", "no need", "we're good",
       "we're fine", "not for us"
     ],
-    script: "I totally get that \u2014 and honestly, most homeowners I call in San Diego feel the same way at first. I'm not calling to pressure you into anything. I actually specialize in your area and I've been tracking your neighborhood closely. Would it be fair if I just shared what your home could realistically sell for in today's market? If the number doesn't excite you, I promise I won't call again."
+    script: "I totally get that \u2014 and honestly, most homeowners I call feel the same way at first. I'm not calling to pressure you into anything. I actually specialize in your area and I've been tracking your neighborhood closely. Would it be fair if I just shared what your home could realistically sell for in today's market? If the number doesn't excite you, I promise I won't call again."
   },
   {
     id: "not-interested-firm",
@@ -37,7 +37,7 @@ const SCRIPTS_DB = [
       "took it off", "agent couldn't sell", "waste of time", "tried that already",
       "been through this", "sat on the market", "no offers", "bad experience"
     ],
-    script: "I completely understand your frustration \u2014 having your home sit on the market with no results is one of the worst experiences. And I'm not going to sit here and badmouth your previous agent. But here's what I can tell you: there are really only three reasons a home doesn't sell \u2014 price, condition, or marketing. Our team invests over $30,000 a month in marketing alone, and we have a dedicated listing specialist who manages every detail. What if we did a quick analysis to show you exactly what went wrong last time and what we'd do differently? No commitment \u2014 just information."
+    script: "I completely understand your frustration \u2014 having your home sit on the market with no results is one of the worst experiences. And I'm not going to sit here and badmouth your previous agent. But here's what I can tell you: there are really only three reasons a home doesn't sell \u2014 price, condition, or marketing. Our team invests heavily in marketing, and we have a dedicated listing specialist who manages every detail. What if we did a quick analysis to show you exactly what went wrong last time and what we'd do differently? No commitment \u2014 just information."
   },
   {
     id: "already-have-agent",
@@ -51,7 +51,7 @@ const SCRIPTS_DB = [
       "brother is a realtor", "know someone in real estate",
       "neighbor is an agent", "have someone"
     ],
-    script: "That's great you have someone you trust \u2014 that's actually smart. Quick question though: are you under a signed listing agreement right now, or is it more of a casual relationship? I only ask because a lot of homeowners in San Diego have found that getting a second pricing opinion actually helped them and their agent get a better result. Our team spends over $30,000 a month in marketing and we have a dedicated listing specialist \u2014 sometimes a fresh set of eyes on the pricing strategy makes a real difference."
+    script: "That's great you have someone you trust \u2014 that's actually smart. Quick question though: are you under a signed listing agreement right now, or is it more of a casual relationship? I only ask because a lot of homeowners have found that getting a second pricing opinion actually helped them and their agent get a better result. Our team invests heavily in marketing and we have a dedicated listing specialist \u2014 sometimes a fresh set of eyes on the pricing strategy makes a real difference."
   },
   {
     id: "bad-timing",
@@ -64,7 +64,7 @@ const SCRIPTS_DB = [
       "can't talk", "call me back", "another time", "maybe later",
       "eating dinner", "with my family"
     ],
-    script: "I totally get it, I caught you at a bad moment. I'll keep it to literally 10 seconds: I'm a local real estate specialist and homes in your San Diego neighborhood are selling for more than most owners expect right now. Can I call you back tomorrow? What time works best \u2014 mornings or evenings?"
+    script: "I totally get it, I caught you at a bad moment. I'll keep it to literally 10 seconds: I'm a local real estate specialist and homes in your neighborhood are selling for more than most owners expect right now. Can I call you back tomorrow? What time works best \u2014 mornings or evenings?"
   },
   {
     id: "not-selling-general",
@@ -78,7 +78,7 @@ const SCRIPTS_DB = [
       "we're staying", "not going anywhere", "like our neighborhood",
       "love this area"
     ],
-    script: "That makes total sense \u2014 most people I talk to aren't looking to sell right now. The only reason I'm reaching out is that San Diego inventory is extremely low and buyer demand in your neighborhood has pushed values up significantly. Would you be open to just knowing what your home is worth? No commitment, no pressure. A lot of homeowners use it for financial planning, refinancing, or even challenging their property tax assessment."
+    script: "That makes total sense \u2014 most people I talk to aren't looking to sell right now. The only reason I'm reaching out is that local inventory is extremely low and buyer demand in your neighborhood has pushed values up significantly. Would you be open to just knowing what your home is worth? No commitment, no pressure. A lot of homeowners use it for financial planning, refinancing, or even challenging their property tax assessment."
   },
   {
     id: "not-selling-just-bought",
@@ -105,7 +105,7 @@ const SCRIPTS_DB = [
       "interest rates", "rates are too high", "values are dropping",
       "prices going down"
     ],
-    script: "That's a really smart thing to be thinking about. Here's what's actually happening in San Diego County right now \u2014 despite what the national headlines say, our local market is different. Inventory is still tight and well-priced homes are still moving fast, many with multiple offers. What if I put together a custom market analysis for your home specifically? Real numbers, not Zillow estimates. That way you can make a decision based on facts, not headlines. Would that be helpful?"
+    script: "That's a really smart thing to be thinking about. Here's what's actually happening in your area right now \u2014 despite what the national headlines say, our local market is different. Inventory is still tight and well-priced homes are still moving fast, many with multiple offers. What if I put together a custom market analysis for your home specifically? Real numbers, not Zillow estimates. That way you can make a decision based on facts, not headlines. Would that be helpful?"
   },
   {
     id: "do-not-call",
@@ -132,7 +132,7 @@ const SCRIPTS_DB = [
       "too expensive to list", "save money by selling",
       "not paying an agent", "agent fees", "why would i pay"
     ],
-    script: "I totally understand wanting to save on commission \u2014 that's smart business thinking. Here's something I share with a lot of FSBO sellers in San Diego: on average, agent-listed homes sell for significantly more than FSBO homes, even after commission. Our team spends $30,000 a month on marketing to get your home in front of qualified buyers \u2014 that's exposure you can't replicate on Zillow alone. What if I showed you, with real numbers from your neighborhood, how listing with us could actually net you more money even after our fee? No pressure \u2014 just the math."
+    script: "I totally understand wanting to save on commission \u2014 that's smart business thinking. Here's something I share with a lot of FSBO sellers: on average, agent-listed homes sell for significantly more than FSBO homes, even after commission. Our team invests heavily in marketing to get your home in front of qualified buyers \u2014 that's exposure you can't replicate on Zillow alone. What if I showed you, with real numbers from your neighborhood, how listing with us could actually net you more money even after our fee? No pressure \u2014 just the math."
   },
   {
     id: "want-to-try-myself",
@@ -146,7 +146,7 @@ const SCRIPTS_DB = [
       "going to try", "handle it ourselves", "we can do it",
       "for sale by owner", "fsbo"
     ],
-    script: "I respect that 100% \u2014 you clearly know your home better than anyone. Here's what I'd suggest: give it a shot, and I'll be a resource for you either way. In the meantime, I can send you a free market analysis showing what comparable homes in your San Diego neighborhood actually sold for \u2014 not just what they listed for. That way you're pricing it right from day one. And if you decide you want help down the road, you'll already have my number."
+    script: "I respect that 100% \u2014 you clearly know your home better than anyone. Here's what I'd suggest: give it a shot, and I'll be a resource for you either way. In the meantime, I can send you a free market analysis showing what comparable homes in your neighborhood actually sold for \u2014 not just what they listed for. That way you're pricing it right from day one. And if you decide you want help down the road, you'll already have my number."
   },
   {
     id: "tenant-issues",
@@ -161,7 +161,7 @@ const SCRIPTS_DB = [
       "tenant won't leave", "tenant not paying", "rental headache",
       "landlord"
     ],
-    script: "I hear you \u2014 being a landlord in San Diego isn't getting any easier with the new tenant protection laws and rising maintenance costs. A lot of rental property owners I work with have been surprised to learn just how much their property has appreciated. Have you thought about what you could do with that equity? Whether it's a 1031 exchange into something more passive or just cashing out at the top, I can show you the numbers. Would a free property valuation be useful?"
+    script: "I hear you \u2014 being a landlord isn't getting any easier with the new tenant protection laws and rising maintenance costs. A lot of rental property owners I work with have been surprised to learn just how much their property has appreciated. Have you thought about what you could do with that equity? Whether it's a 1031 exchange into something more passive or just cashing out at the top, I can show you the numbers. Would a free property valuation be useful?"
   },
   {
     id: "financial-distress",
@@ -176,7 +176,7 @@ const SCRIPTS_DB = [
       "can't make payments", "falling behind", "financial trouble",
       "need to sell fast"
     ],
-    script: "I appreciate you taking my call, and I want you to know I'm reaching out to help, not to pressure you. I specialize in helping San Diego homeowners explore their options before things get more complicated. The good news is that San Diego property values have risen significantly \u2014 most homeowners in your situation actually have a lot more equity than they realize. Sometimes selling and walking away with cash in hand is the best path. Sometimes there are other options. Would it help to have a confidential conversation about what your home is worth and what options are available? Everything stays between us."
+    script: "I appreciate you taking my call, and I want you to know I'm reaching out to help, not to pressure you. I specialize in helping homeowners explore their options before things get more complicated. The good news is that local property values have risen significantly \u2014 most homeowners in your situation actually have a lot more equity than they realize. Sometimes selling and walking away with cash in hand is the best path. Sometimes there are other options. Would it help to have a confidential conversation about what your home is worth and what options are available? Everything stays between us."
   }
 ];
 
@@ -249,24 +249,24 @@ const LEAD_TYPE_LABELS = {
 // Opening scripts — what to say when the prospect picks up the phone
 const OPENING_SCRIPTS = {
   "": {
-    script: "Hi, is this ___? Hey ___, my name is ___ and I work with a real estate team here in San Diego County. The reason for my call — I've been tracking homes in your neighborhood and I noticed something I wanted to share with you. Do you have just two minutes?",
+    script: "Hi, is this ___? Hey ___, my name is ___ and I work with a real estate team here in your area. The reason for my call — I've been tracking homes in your neighborhood and I noticed something I wanted to share with you. Do you have just two minutes?",
     followUp: "Great. So here's the thing — inventory in your area is really low right now, which means homes like yours are in high demand. Buyers are competing for properties. I put together a quick analysis on your home and I think you'd be surprised at what it could sell for. Would you be open to hearing those numbers?",
   },
   expired: {
-    script: "Hi, is this ___? Hey ___, my name is ___ and I'm with a real estate team here in San Diego. I'm calling because I noticed your home was on the market and the listing has expired. I specialize in helping homeowners in your situation and I wanted to reach out. Are you still thinking about selling?",
-    followUp: "I understand. Here's why I'm calling though — the market has shifted since your listing expired and homes in your neighborhood are actually selling faster now. Our team has a dedicated listing specialist and we invest over $30,000 a month in marketing. What if I could show you exactly what went wrong last time and a plan to get it sold this time? No commitment at all.",
+    script: "Hi, is this ___? Hey ___, my name is ___ and I'm with a real estate team here in your area. I'm calling because I noticed your home was on the market and the listing has expired. I specialize in helping homeowners in your situation and I wanted to reach out. Are you still thinking about selling?",
+    followUp: "I understand. Here's why I'm calling though — the market has shifted since your listing expired and homes in your neighborhood are actually selling faster now. Our team has a dedicated listing specialist and we invest heavily in marketing. What if I could show you exactly what went wrong last time and a plan to get it sold this time? No commitment at all.",
   },
   fsbo: {
-    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in San Diego. I saw that you're selling your home on your own and I respect that. I'm calling because I work with a lot of buyers in your area and I wanted to see if you'd be open to hearing what a partnership could look like?",
-    followUp: "I totally get wanting to save on commission — that's smart. Here's what I can offer: our team spends $30,000 a month on marketing and we have access to every qualified buyer in the MLS. What if I showed you the numbers — what your home would likely sell for with us versus on your own? If the math doesn't make sense, I'll be the first to tell you to keep doing what you're doing.",
+    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in your area. I saw that you're selling your home on your own and I respect that. I'm calling because I work with a lot of buyers in your area and I wanted to see if you'd be open to hearing what a partnership could look like?",
+    followUp: "I totally get wanting to save on commission — that's smart. Here's what I can offer: our team invests heavily in marketing and we have access to every qualified buyer in the MLS. What if I showed you the numbers — what your home would likely sell for with us versus on your own? If the math doesn't make sense, I'll be the first to tell you to keep doing what you're doing.",
   },
   frbo: {
-    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in San Diego. I noticed you have a rental property in the area and I wanted to reach out. With the way San Diego property values have gone up, a lot of landlords I talk to are surprised at how much equity they're sitting on. Is that something you've thought about?",
+    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in your area. I noticed you have a rental property in the area and I wanted to reach out. With the way local property values have gone up, a lot of landlords I talk to are surprised at how much equity they're sitting on. Is that something you've thought about?",
     followUp: "I hear that. A lot of landlords feel the same way. Here's what I've been seeing though — between rising maintenance costs, the new tenant protection laws, and property values near historic highs, many owners are finding they can take their equity and put it into something more passive. What if I ran the numbers for your property? Just so you know exactly where you stand.",
   },
   "pre-foreclosure": {
-    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in San Diego. I'm reaching out because I help homeowners explore their options during challenging situations. This is a completely confidential call. I've helped several families in your area navigate this and come out in a much better position. Would you be open to a quick conversation?",
-    followUp: "I completely understand, and I want you to know I'm not here to pressure you. The good news is San Diego property values have gone up significantly — you likely have more equity than you realize, which means you have options. What if I put together a confidential property valuation? Everything stays between us, and you'll have real numbers to work with.",
+    script: "Hi, is this ___? Hey ___, my name is ___ with a real estate team here in your area. I'm reaching out because I help homeowners explore their options during challenging situations. This is a completely confidential call. I've helped several families in your area navigate this and come out in a much better position. Would you be open to a quick conversation?",
+    followUp: "I completely understand, and I want you to know I'm not here to pressure you. The good news is local property values have gone up significantly — you likely have more equity than you realize, which means you have options. What if I put together a confidential property valuation? Everything stays between us, and you'll have real numbers to work with.",
   },
 };
 
